@@ -1,4 +1,4 @@
-// Active Directory pen-testing — senior interview questions.
+// Active Directory pen-testing — senior-level PT questions.
 // Authority sources: MITRE ATT&CK, Microsoft Learn (Kerberos / NTLM / ADCS), SpecterOps research.
 
 window.QUESTION_BANK.ad = [
@@ -139,7 +139,7 @@ window.QUESTION_BANK.ad = [
     topic: 'ad',
     subtopic: 'pth-vs-ptt',
     difficulty: 'senior',
-    question: 'An interviewer asks the difference between Pass-the-Hash and Pass-the-Ticket. Which statement is the most accurate, senior-level distinction?',
+    question: 'What is the most accurate, senior-level distinction between Pass-the-Hash and Pass-the-Ticket?',
     choices: [
       'PtH replays an NTLM hash to authenticate to NTLM-accepting services; PtT injects a Kerberos ticket (TGT or TGS) into memory to authenticate to Kerberos services',
       'PtH works only on Linux; PtT works only on Windows',

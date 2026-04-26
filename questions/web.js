@@ -1,4 +1,4 @@
-// Web App Pen-Testing — senior interview questions.
+// Web App Pen-Testing — senior-level PT questions.
 // Authority sources: PortSwigger Web Security Academy, OWASP Top 10, OWASP Testing Guide v4, OWASP ASVS.
 // Discovery sources are not used as citations.
 
@@ -382,7 +382,7 @@ window.QUESTION_BANK.web = [
     topic: 'web',
     subtopic: 'open-redirect',
     difficulty: 'senior',
-    question: 'A login flow redirects to `?next=/dashboard`. You change `next=//evil.com` and the browser is redirected to evil.com. The interviewer asks: in modern AppSec impact terms, why is open redirect rarely standalone-critical, and when does it become high-severity?',
+    question: 'A login flow redirects to `?next=/dashboard`. You change `next=//evil.com` and the browser is redirected to evil.com. In modern AppSec impact terms, why is open redirect rarely standalone-critical, and when does it become high-severity?',
     choices: [
       'It is never exploitable',
       'Open redirect alone is usually low/info; it becomes high-severity when chained with OAuth (state-less or redirect_uri matching loose) to leak auth codes, or used to bypass SSRF allow-lists',
@@ -654,7 +654,7 @@ window.QUESTION_BANK.web = [
       'OWASP Juice Shop',
     ],
     correctIndex: 1,
-    explanation: 'OWASP ASVS provides verifiable security requirements (V1 architecture through V14 configuration). The Top 10 is an awareness/risk list, not a verification standard. ZAP and Juice Shop are tools/labs. Knowing this distinction is a common senior-level interview probe.',
+    explanation: 'OWASP ASVS provides verifiable security requirements (V1 architecture through V14 configuration). The Top 10 is an awareness/risk list, not a verification standard. ZAP and Juice Shop are tools/labs. Knowing this distinction separates senior-level practitioners.',
     distractorRationale: {
       0: 'OWASP Top 10 is awareness, not a verification standard.',
       2: 'ZAP is a scanner.',

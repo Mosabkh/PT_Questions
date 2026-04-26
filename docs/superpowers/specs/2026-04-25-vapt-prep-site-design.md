@@ -1,17 +1,18 @@
-# VAPT Interview Prep — Local MCQ Trainer
+# PT Questions — Senior VAPT Question Bank (Local MCQ Trainer)
 
 **Date:** 2026-04-25
 **Author:** Mosab Khalifeh (with Claude)
-**Target:** Senior VAPT interview on 2026-04-26 (dairy/food factory employer)
+**Target:** Self-study tool for senior VAPT roles
 **Status:** Approved for implementation
 
 ## Goal
 
-A small, single-user, offline web app that drills the user on ~100 senior-level
-penetration-testing multiple-choice questions before tomorrow's interview. The
-app must produce a per-cycle score, surface weak topics, and — when the user
-answers wrong — explain the correct answer in plain English with a citation to
-a trusted authority before letting them advance.
+A small, single-user, offline web app that drills the user on senior-level
+penetration-testing multiple-choice questions across web, Active Directory,
+network, and mobile. The app must produce a per-cycle score, surface weak
+topics, and — when the user answers wrong — explain the correct answer in
+plain English with a citation to a trusted authority before letting them
+advance.
 
 ## Constraints
 
@@ -51,7 +52,7 @@ Two distinct roles, kept separate:
 **Discovery sources** (used to find which questions are commonly asked) —
 treated as community references, not authorities:
 - HackTricks
-- Public GitHub aggregator repos that compile real senior pentest interview
+- Public GitHub aggregator repos that compile real senior pen-test prep
   questions (we prioritize questions that appear across multiple independent
   lists)
 
@@ -74,7 +75,7 @@ against the authority sources), not authoring.
 ## Architecture
 
 ```
-Preparing_PT_Interview/
+PT_Questions/
   index.html              # markup shell; <script> tags pull in topic banks then app.js
   styles.css              # dark, distraction-free
   app.js                  # vanilla JS: cycle logic, Leitner state, rendering (~300 lines)
@@ -244,6 +245,6 @@ authority-backed citations or distractor rationales.
 
 - Project folder is not a git repo. We are NOT initializing one for tomorrow's
   scope — if user later wants version control, run `git init` then.
-- The "famous senior interview questions" claim is best-effort: there is no
+- The "famous senior PT prep questions" claim is best-effort: there is no
   canonical list. We bias toward questions that appear across multiple public
   aggregator repos and have authority-backed answers.

@@ -1,7 +1,7 @@
-# VAPT Senior Interview Prep — Local MCQ Trainer
+# PT Questions — Senior VAPT Question Bank
 
 Single-user, offline web app for drilling senior-level penetration-testing
-multiple-choice questions before tomorrow's interview.
+multiple-choice questions across web, Active Directory, network, and mobile.
 
 ## How to run
 

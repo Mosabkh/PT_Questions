@@ -1,4 +1,4 @@
-// Network pen-testing — senior interview questions.
+// Network pen-testing — senior-level PT questions.
 // Authority sources: Nmap official docs, Microsoft Learn, MITRE ATT&CK, NIST SP 800-115, vendor docs.
 
 window.QUESTION_BANK.network = [
@@ -103,7 +103,7 @@ window.QUESTION_BANK.network = [
       'Replay captured EtherNet/IP packets at line rate',
     ],
     correctIndex: 1,
-    explanation: 'CISA, ISA/IEC 62443 and NIST SP 800-82 all stress that legacy ICS devices were not designed to handle modern scan traffic; even a benign Nmap can crash a PLC and halt production. The senior-appropriate posture is explicit scope confirmation, passive observation, and only authorised, conservative active testing. This is also a common interview probe for senior pentesters.',
+    explanation: 'CISA, ISA/IEC 62443 and NIST SP 800-82 all stress that legacy ICS devices were not designed to handle modern scan traffic; even a benign Nmap can crash a PLC and halt production. The senior-appropriate posture is explicit scope confirmation, passive observation, and only authorised, conservative active testing.',
     distractorRationale: {
       0: 'A `-T4 -A -p-` aggressive scan against ICS gear is exactly the action that has historically caused outages — never the right move.',
       2: 'Function code 8 sub-codes can stop the device or clear counters; running it without explicit authorisation is irresponsible.',
@@ -403,7 +403,7 @@ window.QUESTION_BANK.network = [
     topic: 'network',
     subtopic: 'kerberos-port',
     difficulty: 'senior',
-    question: 'A senior interviewer asks: which port(s) and transport does Kerberos use, and why does the answer matter for firewall/segmentation reviews?',
+    question: 'Which port(s) and transport does Kerberos use, and why does the answer matter for firewall/segmentation reviews?',
     choices: [
       'TCP/UDP 88 for KDC operations and TCP/UDP 464 for kpasswd. Both UDP and TCP must be reachable; TCP becomes mandatory for large PAC payloads (groups). Blocking only UDP and assuming TCP also blocked is a common scoping error',
       'TCP 21 only',

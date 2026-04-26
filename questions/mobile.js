@@ -1,4 +1,4 @@
-// Mobile App pen-testing — senior interview questions.
+// Mobile App pen-testing — senior-level PT questions.
 // Authority sources: OWASP MASVS, OWASP MASTG, OWASP Mobile Top 10, Android/iOS official developer docs.
 
 window.QUESTION_BANK.mobile = [
