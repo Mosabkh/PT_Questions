@@ -1,0 +1,18 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Node (if you ever add tooling)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Local progress dumps (if you add an export feature)
+state-export*.json
+
+# Skill / superpowers scratch — keep specs in repo, drop scratchpads
+docs/superpowers/specs/*.draft.md

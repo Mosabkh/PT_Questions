@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <title>VAPT Senior Prep</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>VAPT Senior Prep</h1>
+      <div id="header-stats" class="muted"></div>
+    </header>
+    <main id="screen-host">
+      <div class="loading">Loading question bank…</div>
+    </main>
+    <footer class="muted">
+      Local-only · No network · Press <kbd>R</kbd> to reset state
+    </footer>
+  </div>
+
+  <script>window.QUESTION_BANK = {};</script>
+  <script src="questions/web.js"></script>
+  <script src="questions/ad.js"></script>
+  <script src="questions/network.js"></script>
+  <script src="questions/mobile.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
