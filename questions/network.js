@@ -551,4 +551,354 @@ window.QUESTION_BANK.network = [
     },
     source: { name: 'NIST SP 800-82 Rev. 3 — Guide to OT Security (references the Purdue/IEC 62443 models)', url: 'https://csrc.nist.gov/publications/detail/sp/800-82/rev-3/final' },
   },
+
+  {
+    id: 'net-026', topic: 'network', subtopic: 'nmap-nse', difficulty: 'senior',
+    question: 'Nmap NSE (Nmap Scripting Engine) lets you run scripts against discovered services. Which categories should a senior pentester invoke selectively versus by default?',
+    choices: ['Default categories include `default`, `safe`, `discovery`. Categories like `intrusive`, `exploit`, `vuln`, `dos`, `brute` should be invoked only with explicit authorisation because they may probe vulnerable code paths or send brute-force traffic', '`default` is the only category', 'All categories are safe by default', '`exploit` is enabled when you use `-sV`'],
+    correctIndex: 0,
+    explanation: 'Nmap NSE\'s categories let you scope script behaviour. The official Nmap docs enumerate them. RoE for assessments typically restricts intrusive/exploit/dos/brute scripts unless agreed.',
+    distractorRationale: { 1: 'There are many categories.', 2: 'Intrusive ones can break services.', 3: '-sV is service-version detection, not exploit.' },
+    source: { name: 'Nmap NSE Categories — official documentation', url: 'https://nmap.org/book/nse-usage.html#nse-categories' },
+  },
+
+  {
+    id: 'net-027', topic: 'network', subtopic: 'nmap-version-detection', difficulty: 'senior',
+    question: '`nmap -sV` enables service version detection. What does this do under the hood, and what is its operational caveat?',
+    choices: ['It probes responding ports with a sequence of crafted application-layer payloads (HTTP GET, FTP banner, SMB negotiate, etc.) and matches responses against `nmap-service-probes`. Caveat: it generates more noise/logs than a straight port scan and may interact unsafely with fragile services (e.g., legacy ICS)', 'It downgrades TLS', 'It encrypts the scan', 'It is identical to OS detection'],
+    correctIndex: 0,
+    explanation: 'Service version detection sends application-layer probes to fingerprint software. Useful for triage, but louder than SYN-only scans. The Nmap book documents probe behaviour and intensity (`--version-intensity`).',
+    distractorRationale: { 1: 'TLS handling is independent.', 2: 'Scans are not encrypted.', 3: 'OS detection is `-O`, separate.' },
+    source: { name: 'Nmap — Service and Version Detection', url: 'https://nmap.org/book/man-version-detection.html' },
+  },
+
+  {
+    id: 'net-028', topic: 'network', subtopic: 'masscan', difficulty: 'senior',
+    question: 'Masscan claims to scan the entire IPv4 internet quickly. What is its key architectural difference from Nmap, and why does that matter operationally?',
+    choices: ['Masscan implements its own asynchronous TCP/IP stack and bypasses the kernel network stack — it can sustain millions of packets per second. Operational caveat: easy to overwhelm targets/upstream networks; high false-positive rates if probes are dropped; and it uses random scan order so targets receive intermittent SYNs', 'It is just a wrapper around Nmap', 'It only does ICMP', 'It runs only over TLS'],
+    correctIndex: 0,
+    explanation: 'Robert Graham\'s Masscan is purpose-built for internet-scale scanning, with its own TCP stack. The README documents tuning (--rate, randomisation) and operational considerations.',
+    distractorRationale: { 1: 'It is independent of Nmap.', 2: 'Multi-protocol.', 3: 'It is not TLS-bound.' },
+    source: { name: 'Masscan — official GitHub README', url: 'https://github.com/robertdavidgraham/masscan' },
+  },
+
+  {
+    id: 'net-029', topic: 'network', subtopic: 'tcpdump-bpf', difficulty: 'senior',
+    question: '`tcpdump host 10.0.0.5 and port 80` works because tcpdump compiles the expression to which low-level filter mechanism?',
+    choices: ['BPF (Berkeley Packet Filter) bytecode applied at the kernel level so only matching packets are copied to userspace — efficient at high traffic. The same compiler is used by libpcap-based tools (Wireshark, etc.)', 'A regex run in userspace on every packet', 'A SQL query', 'A JavaScript engine'],
+    correctIndex: 0,
+    explanation: 'tcpdump compiles its filter expressions to BPF bytecode, executed in-kernel. The tcpdump and libpcap manuals describe the syntax and the underlying mechanism.',
+    distractorRationale: { 1: 'Userspace regex per packet would be far too slow.', 2: 'No SQL involved.', 3: 'No JS.' },
+    source: { name: 'tcpdump(8) man page — BPF syntax', url: 'https://www.tcpdump.org/manpages/tcpdump.1.html' },
+  },
+
+  {
+    id: 'net-030', topic: 'network', subtopic: 'wireshark-display-filters', difficulty: 'senior',
+    question: 'In Wireshark, the difference between capture filters and display filters is:',
+    choices: ['Capture filters use BPF syntax and apply at capture time (cannot be undone), reducing what is recorded. Display filters use Wireshark\'s own expression language and apply on already-captured data, more powerful but slower. Senior testers usually capture broadly and filter at display time to retain analytical flexibility', 'They are identical', 'Capture filters are BSD-only', 'Display filters require root'],
+    correctIndex: 0,
+    explanation: 'Wireshark\'s docs explain both filter types and their tradeoffs. Senior practice is to capture wide, filter narrow — unless throughput requires otherwise.',
+    distractorRationale: { 1: 'Different syntaxes and timings.', 2: 'BPF works on Linux, BSD, macOS.', 3: 'Display filters do not require root.' },
+    source: { name: 'Wireshark User Guide — Display Filter vs Capture Filter', url: 'https://www.wireshark.org/docs/wsug_html_chunked/ChWorkBuildDisplayFilterSection.html' },
+  },
+
+  {
+    id: 'net-031', topic: 'network', subtopic: 'inveigh', difficulty: 'senior',
+    question: 'Inveigh is a tool from the AD attack ecosystem. What does it do?',
+    choices: ['Inveigh is a Windows-native alternative to Responder, listening for LLMNR/NBT-NS/mDNS/DHCPv6 broadcasts and answering them to coerce NTLM authentication for relay or hash capture. Useful when running from a Windows beachhead host', 'It is a port scanner', 'It is a wireless cracker', 'It is a SQL injection tool'],
+    correctIndex: 0,
+    explanation: 'Inveigh complements Responder when the testing environment is Windows-only. Its GitHub describes feature parity and Windows-specific advantages.',
+    distractorRationale: { 1: 'Not a port scanner.', 2: 'Not wireless.', 3: 'Not SQLi.' },
+    source: { name: 'Inveigh — official GitHub repository', url: 'https://github.com/Kevin-Robertson/Inveigh' },
+  },
+
+  {
+    id: 'net-032', topic: 'network', subtopic: 'evil-winrm', difficulty: 'senior',
+    question: 'Evil-WinRM is a tester favourite for what?',
+    choices: ['An interactive WinRM shell with built-in features for file upload/download, in-memory `Invoke-Binary` execution of .NET assemblies, AMSI bypass helpers, and Pass-the-Hash support — purpose-built for offensive WinRM workflows', 'A vulnerability scanner', 'A wireless cracker', 'A web crawler'],
+    correctIndex: 0,
+    explanation: 'Evil-WinRM (Hackplayers) wraps PowerShell\'s WinRM client with offensive ergonomics. The README documents flags and the in-memory execution helpers.',
+    distractorRationale: { 1: 'Not a vuln scanner.', 2: 'Not wireless.', 3: 'Not a crawler.' },
+    source: { name: 'Hackplayers — Evil-WinRM GitHub repository', url: 'https://github.com/Hackplayers/evil-winrm' },
+  },
+
+  {
+    id: 'net-033', topic: 'network', subtopic: 'ntlmrelayx', difficulty: 'senior',
+    question: 'Impacket\'s `ntlmrelayx.py` is the canonical NTLM relay tool. Which target protocols does it support?',
+    choices: ['SMB, LDAP/LDAPS, HTTP/HTTPS (including AD CS Web Enrollment for ESC8), MSSQL, IMAP, SMTP, RPC and others — paired with coercion primitives (PetitPotam, PrinterBug, DFSCoerce) for end-to-end relay chains', 'SMB only', 'HTTP only', 'Telnet only'],
+    correctIndex: 0,
+    explanation: 'ntlmrelayx is multi-protocol and integrates many target-specific abuse paths (LDAP modifications for RBCD, ADCS issuance, etc.). Impacket\'s docs and examples enumerate options.',
+    distractorRationale: { 1: 'Multi-protocol.', 2: 'Multi-protocol.', 3: 'Telnet is not supported.' },
+    source: { name: 'Fortra Impacket — ntlmrelayx.py examples', url: 'https://github.com/fortra/impacket/blob/master/examples/ntlmrelayx.py' },
+  },
+
+  {
+    id: 'net-034', topic: 'network', subtopic: 'firewall-evasion', difficulty: 'senior',
+    question: 'Nmap\'s `--source-port`, `-f`, and `--data-length` options are documented as which kind of evasions, and when do they actually help?',
+    choices: ['Firewall/IDS evasion — useful against simple stateless filters that allow traffic from common ports (53, 80) or that drop very short fragmented packets. Modern stateful firewalls and IDS/IPS render most of these obsolete; their value is mostly in legacy networks', 'They speed up scans', 'They encrypt traffic', 'They bypass TLS only'],
+    correctIndex: 0,
+    explanation: 'Nmap\'s firewall evasion docs are honest that these techniques are largely historical. Senior testers know when to deploy them (legacy ACLs) vs spend time elsewhere.',
+    distractorRationale: { 1: 'Speed is via timing templates.', 2: 'No encryption added.', 3: 'TLS is unrelated.' },
+    source: { name: 'Nmap — Firewall/IDS Evasion and Spoofing', url: 'https://nmap.org/book/man-bypass-firewalls-ids.html' },
+  },
+
+  {
+    id: 'net-035', topic: 'network', subtopic: 'chisel', difficulty: 'senior',
+    question: 'Chisel is widely used during pentests to:',
+    choices: ['Tunnel TCP/UDP through HTTP(S) — useful when only outbound HTTPS is allowed from a compromised host. Implements client/server modes with authenticated WebSocket transport, supports SOCKS proxies, and is a single static Go binary that drops easily on many platforms', 'Crack passwords', 'Decompile binaries', 'Run AV bypass'],
+    correctIndex: 0,
+    explanation: 'jpillora/chisel is a Go-based HTTP-tunneling proxy. Its single-binary deployment and SOCKS support make it a senior pentest workhorse for egress-restricted networks.',
+    distractorRationale: { 1: 'Not a cracker.', 2: 'Not a decompiler.', 3: 'Not AV-focused.' },
+    source: { name: 'jpillora — Chisel GitHub repository', url: 'https://github.com/jpillora/chisel' },
+  },
+
+  {
+    id: 'net-036', topic: 'network', subtopic: 'shodan', difficulty: 'senior',
+    question: 'Shodan is best described as:',
+    choices: ['An internet-wide search engine of banner-grabbed services. Senior pentesters use it during pre-engagement OSINT to enumerate exposed services in scope (with explicit authorisation), check for shadow IT or accidental exposures, and validate scope claims', 'A vulnerability scanner', 'A C2 framework', 'A WAF'],
+    correctIndex: 0,
+    explanation: 'Shodan continually scans the public internet and indexes service banners, certificates and vendor identifiers. The Shodan Help Center documents query syntax and the API.',
+    distractorRationale: { 1: 'It catalogs exposures, does not exploit.', 2: 'Not a C2.', 3: 'Not a WAF.' },
+    source: { name: 'Shodan — Help Center / Documentation', url: 'https://help.shodan.io/' },
+  },
+
+  {
+    id: 'net-037', topic: 'network', subtopic: 'amass', difficulty: 'senior',
+    question: 'OWASP Amass is purpose-built for:',
+    choices: ['Subdomain enumeration combining passive sources (CT logs, public DNS data, search APIs) and active techniques (DNS brute force, zone walking, NSEC). Output feeds attack-surface mapping and subsequent recon', 'Web application scanning', 'Wireless analysis', 'Reverse engineering'],
+    correctIndex: 0,
+    explanation: 'OWASP Amass is the canonical open-source asset-discovery framework. Its docs cover passive and active modes, integrations and graph storage.',
+    distractorRationale: { 1: 'Not a web scanner.', 2: 'Not wireless.', 3: 'Not RE.' },
+    source: { name: 'OWASP Amass — official project page', url: 'https://owasp.org/www-project-amass/' },
+  },
+
+  {
+    id: 'net-038', topic: 'network', subtopic: 'wireshark-tls-keylog', difficulty: 'senior',
+    question: 'You need to decrypt a TLS-encrypted PCAP. The standard Wireshark approach is:',
+    choices: ['Configure the client/browser to write TLS session keys to a file via the `SSLKEYLOGFILE` environment variable, then load the file in Wireshark\'s TLS preferences (Premaster-Secret log). This works for forward-secret ciphers (ECDHE) — RSA key import only works for non-PFS ciphers', 'Brute-force the TLS session', 'Patch Wireshark with the server private key', 'Disable TLS in Wireshark'],
+    correctIndex: 0,
+    explanation: 'NSS-style key logging is supported by browsers (Chrome, Firefox) and many libraries. Wireshark documents loading the keylog file via the TLS protocol preferences. With ECDHE, server key alone is insufficient.',
+    distractorRationale: { 1: 'Brute force is infeasible.', 2: 'Server private key works only for RSA-keyex sessions.', 3: 'Disabling does not decrypt.' },
+    source: { name: 'Wireshark Wiki — TLS decryption (key log)', url: 'https://wiki.wireshark.org/TLS' },
+  },
+
+  {
+    id: 'net-039', topic: 'network', subtopic: 'sslstrip', difficulty: 'senior',
+    question: 'Moxie Marlinspike\'s sslstrip technique is largely defeated today because of which control?',
+    choices: ['HSTS (HTTP Strict Transport Security) — once a browser has cached an HSTS policy for a domain, it refuses to make HTTP requests; preload lists ship with major browsers so even first-visit requests use HTTPS. SSLStrip relied on initial HTTP redirects to begin a session', 'HSTS is irrelevant', 'WPA3', 'TLS 1.3 alone'],
+    correctIndex: 0,
+    explanation: 'HSTS (RFC 6797) and the HSTS preload list neuter sslstrip\'s "downgrade-on-first-request" trick. TLS 1.3 protects sessions but does not prevent users from initially making HTTP requests; HSTS does.',
+    distractorRationale: { 1: 'It is the relevant control.', 2: 'Wireless cipher.', 3: 'TLS 1.3 alone does not prevent sslstrip.' },
+    source: { name: 'IETF RFC 6797 — HSTS', url: 'https://datatracker.ietf.org/doc/html/rfc6797' },
+  },
+
+  {
+    id: 'net-040', topic: 'network', subtopic: 'rustscan', difficulty: 'senior',
+    question: 'RustScan is sometimes positioned as "faster than Nmap". Senior framing of when to use it:',
+    choices: ['RustScan parallelises port discovery aggressively then hands off to Nmap for service detection — useful as a quick first-pass enumerator on large IP ranges. It is not a replacement for Nmap, just a faster front-end. Caveat: aggressive defaults can overwhelm fragile networks (especially OT) and trigger IDS', 'It replaces Nmap entirely', 'It can crack TLS', 'It is a wireless tool'],
+    correctIndex: 0,
+    explanation: 'RustScan\'s README describes its design: fast async port discovery with Nmap delegation. Useful in moderation; defaults need tuning per RoE.',
+    distractorRationale: { 1: 'It calls Nmap for fingerprinting.', 2: 'No TLS attack.', 3: 'Not wireless.' },
+    source: { name: 'RustScan — official GitHub repository', url: 'https://github.com/RustScan/RustScan' },
+  },
+
+  {
+    id: 'net-041', topic: 'network', subtopic: 'nmap-udp', difficulty: 'senior',
+    question: 'UDP scanning (`-sU`) is much slower than SYN scanning. Why?',
+    choices: ['UDP is connectionless: open ports often do not respond, closed ports return ICMP Port Unreachable but ICMP rate limiting (RFC 1812) caps the response rate. Distinguishing open from filtered requires waiting for timeouts. Nmap also probes with protocol-specific payloads (`--version-intensity`) which are slow', 'Because UDP is encrypted', 'Because UDP requires Kerberos', 'Because UDP runs at L7 only'],
+    correctIndex: 0,
+    explanation: 'Nmap\'s UDP scan documentation explains the rate-limit problem and recommends combining `-sU` with payload probes and `--max-retries` tuning. Senior testers know UDP scans need careful pacing.',
+    distractorRationale: { 1: 'UDP is unencrypted.', 2: 'No Kerberos requirement.', 3: 'UDP is a transport.' },
+    source: { name: 'Nmap — UDP Scan (-sU)', url: 'https://nmap.org/book/scan-methods-udp-scan.html' },
+  },
+
+  {
+    id: 'net-042', topic: 'network', subtopic: 'smtp-vrfy-expn', difficulty: 'senior',
+    question: 'Why are SMTP `VRFY` and `EXPN` commands a common reportable finding when enabled?',
+    choices: ['They allow user/mailing-list enumeration without authentication. Senior recommendation: disable both (Postfix `disable_vrfy_command=yes`, sendmail / Exchange equivalents). Modern servers default to disabled but legacy installs often leave them on', 'They encrypt traffic', 'They enforce SPF', 'They require TLS'],
+    correctIndex: 0,
+    explanation: 'RFC 5321 defines VRFY (verify a recipient) and EXPN (expand a list). They leak account/group existence. NIST SP 800-115 and OWASP testing guides recommend disabling them.',
+    distractorRationale: { 1: 'They are unencrypted commands.', 2: 'Unrelated to SPF.', 3: 'TLS is independent.' },
+    source: { name: 'IETF RFC 5321 — Simple Mail Transfer Protocol', url: 'https://datatracker.ietf.org/doc/html/rfc5321' },
+  },
+
+  {
+    id: 'net-043', topic: 'network', subtopic: 'snmpv3-usm', difficulty: 'senior',
+    question: 'SNMPv3 introduces USM (User-based Security Model). What does it provide that SNMPv2c does not?',
+    choices: ['Authenticated and encrypted SNMP messages: per-user credentials with HMAC-MD5/SHA authentication and DES/AES privacy. Replaces shared community strings with cryptographically protected sessions. Caveat: SNMPv3 is more complex to configure and many environments leave v2c enabled in parallel', 'It uses TLS', 'It runs on TCP', 'It authenticates by IP address'],
+    correctIndex: 0,
+    explanation: 'RFC 3414 defines USM. Senior pentesters check for SNMPv3 misconfigurations (auth-only without priv, weak HMAC) and parallel v2c exposure.',
+    distractorRationale: { 1: 'It is not TLS-based.', 2: 'SNMP is on UDP/161.', 3: 'IP-based auth is no auth.' },
+    source: { name: 'IETF RFC 3414 — User-based Security Model (USM) for SNMPv3', url: 'https://datatracker.ietf.org/doc/html/rfc3414' },
+  },
+
+  {
+    id: 'net-044', topic: 'network', subtopic: 'ntp-monlist', difficulty: 'senior',
+    question: 'NTP `monlist` queries became a notorious DDoS amplification vector because:',
+    choices: ['A small request returned a large list of recent peers (amplification factor up to ~556x). Attackers spoofed source IPs to direct massive responses at victims. Mitigations: disable monlist (`disable monitor` in ntp.conf), and ISPs implement BCP38 anti-spoofing', 'NTP is TCP', 'NTP requires TLS', 'NTP uses Kerberos'],
+    correctIndex: 0,
+    explanation: 'CVE-2013-5211 popularised the issue. US-CERT/CISA published advisories and patches; modern NTP defaults disable monlist. BCP38 (anti-spoofing) at the network edge prevents amplification more broadly.',
+    distractorRationale: { 1: 'NTP is on UDP/123.', 2: 'No TLS by default.', 3: 'No Kerberos involvement.' },
+    source: { name: 'CISA — NTP Amplification Attacks Using the monlist Command', url: 'https://www.cisa.gov/news-events/alerts/2014/01/13/ntp-amplification-attacks-using-monlist-command' },
+  },
+
+  {
+    id: 'net-045', topic: 'network', subtopic: 'dns-amplification', difficulty: 'senior',
+    question: 'DNS amplification works because:',
+    choices: ['A small query (~60 bytes) for a large response type (e.g., ANY, DNSKEY) returns a much larger response (often >4kB), and DNS uses UDP which permits source-IP spoofing. Mitigations: rate-limit responses per source (RRL), restrict open recursion, BCP38 at the network edge', 'DNS uses TCP exclusively', 'DNS encrypts queries by default', 'DNS uses Kerberos'],
+    correctIndex: 0,
+    explanation: 'DNS amplification is a long-standing UDP-based DDoS technique. ISC and CISA recommend Response Rate Limiting (RRL) on authoritative servers and disabling open recursion. BCP38 at the network edge addresses spoofing globally.',
+    distractorRationale: { 1: 'DNS is primarily UDP/53.', 2: 'Cleartext by default unless DoT/DoH.', 3: 'No Kerberos.' },
+    source: { name: 'CISA — DNS Amplification Attacks', url: 'https://www.cisa.gov/news-events/alerts/2013/03/29/dns-amplification-attacks' },
+  },
+
+  {
+    id: 'net-046', topic: 'network', subtopic: 'ipv6-slaac', difficulty: 'senior',
+    question: 'IPv6 SLAAC (Stateless Address Autoconfiguration) creates host addresses based on:',
+    choices: ['A Router Advertisement (RA) supplying a /64 prefix combined with an Interface ID derived from the host (originally MAC-based via EUI-64; modern OSes randomise per RFC 7217). Rogue RA attacks exploit hosts that auto-configure from any RA on the link', 'DHCPv4', 'A central PKI', 'BGP'],
+    correctIndex: 0,
+    explanation: 'RFC 4862 defines SLAAC; rogue-RA and RA-flooding are well-known attack vectors. RA Guard at the switch is the standard mitigation. Senior pentesters consider both stateless and DHCPv6-based attack paths.',
+    distractorRationale: { 1: 'DHCPv4 is for IPv4.', 2: 'No PKI involvement.', 3: 'BGP is inter-AS routing.' },
+    source: { name: 'IETF RFC 4862 — IPv6 Stateless Address Autoconfiguration', url: 'https://datatracker.ietf.org/doc/html/rfc4862' },
+  },
+
+  {
+    id: 'net-047', topic: 'network', subtopic: 'nmap-idle-scan', difficulty: 'senior',
+    question: 'Nmap\'s idle scan (`-sI <zombie>`) achieves what?',
+    choices: ['Source-spoofed scanning: probes appear to come from a "zombie" host with predictable IP-ID sequences. The attacker observes the zombie\'s IP-ID changes to infer port states on the target. Useful (in legitimate testing) for confirming firewall asymmetry; rarely used today because most modern OSes randomise IP-IDs', 'It speeds up scans', 'It encrypts scans', 'It enables UDP scans'],
+    correctIndex: 0,
+    explanation: 'Idle scan exploits predictable IP-ID counters on the zombie. The Nmap book documents the technique in detail. It is more academic on modern OSes but still occasionally useful.',
+    distractorRationale: { 1: 'It is slower than direct scans.', 2: 'No encryption.', 3: 'Unrelated to UDP.' },
+    source: { name: 'Nmap — Idle Scan (-sI)', url: 'https://nmap.org/book/idlescan.html' },
+  },
+
+  {
+    id: 'net-048', topic: 'network', subtopic: 'nmap-decoy', difficulty: 'senior',
+    question: 'Nmap\'s `-D RND:5,ME` decoy scan does what, and what is its operational reality?',
+    choices: ['Sends scans alongside spoofed packets from random decoy IPs (with ME = your real IP) so the target log sees multiple sources. Operational reality: modern IDS / threat intel correlation often unmasks the real source quickly; decoys are mostly useful for blending, not for evading attribution', 'It encrypts the scan', 'It is required for Nmap to work', 'It bypasses authentication'],
+    correctIndex: 0,
+    explanation: 'Decoy scan is a long-standing Nmap feature. The Nmap book is clear about its limited operational value against well-instrumented defenders.',
+    distractorRationale: { 1: 'No encryption.', 2: 'Optional flag.', 3: 'No auth bypass.' },
+    source: { name: 'Nmap — Cloak a Scan with Decoys', url: 'https://nmap.org/book/man-bypass-firewalls-ids.html#idm46168700019792' },
+  },
+
+  {
+    id: 'net-049', topic: 'network', subtopic: 'redis-unauth', difficulty: 'senior',
+    question: 'An unauthenticated Redis instance bound to 0.0.0.0 enables which classic post-discovery attack on a Linux host?',
+    choices: ['Writing the attacker\'s SSH public key into ~/.ssh/authorized_keys via `CONFIG SET dir /home/redis/.ssh` + `CONFIG SET dbfilename authorized_keys` + `SAVE` — gaining SSH as the redis user. Mitigation: bind to localhost, set requirepass, or enable ACLs (Redis 6+)', 'Mining Bitcoin', 'A CSRF', 'A clickjacking'],
+    correctIndex: 0,
+    explanation: 'The "Redis SSH key drop" technique is widely exploited in opportunistic attacks. Redis docs and many CVE writeups document the prerequisites and the SAVE-to-file primitive.',
+    distractorRationale: { 1: 'Bitcoin mining is post-RCE; the attack is the file write.', 2: 'CSRF is browser-issued.', 3: 'Clickjacking is iframe-based.' },
+    source: { name: 'Redis Security — official documentation', url: 'https://redis.io/docs/management/security/' },
+  },
+
+  {
+    id: 'net-050', topic: 'network', subtopic: 'memcached-amplification', difficulty: 'senior',
+    question: 'Memcached UDP amplification is notable because:',
+    choices: ['Pre-1.5.6 Memcached listened on UDP by default with no auth, allowing spoofed source-IP queries that returned multi-kilobyte responses (amplification factor 50,000x+). Mitigations: upgrade and disable UDP entirely (`-U 0`), and never expose Memcached to untrusted networks', 'It is encrypted by default', 'It uses Kerberos', 'It runs on TCP only'],
+    correctIndex: 0,
+    explanation: 'CVE-2018 (the GitHub.com 1.35 Tbps DDoS) leveraged Memcached UDP. The Memcached project disabled UDP by default in 1.5.6+. CISA and US-CERT published advisories.',
+    distractorRationale: { 1: 'No TLS by default.', 2: 'No Kerberos.', 3: 'It supports both TCP and UDP historically.' },
+    source: { name: 'CISA — Cisco Memcached Reflection / Amplification Attacks Advisory', url: 'https://www.cisa.gov/news-events/alerts/2018/02/27/memcached-distributed-denial-service-attacks' },
+  },
+
+  {
+    id: 'net-051', topic: 'network', subtopic: 'docker-exposed-daemon', difficulty: 'senior',
+    question: 'A Docker daemon exposed on TCP 2375 (no TLS) yields what?',
+    choices: ['Full RCE as root on the host: any client can `docker run -v /:/mnt --privileged ubuntu chroot /mnt sh` to escape into the host filesystem. Mitigations: bind to localhost only, require client certificates (TLS on 2376), and treat exposed daemons as critical findings', 'A safe management API', 'A read-only metrics interface', 'A Kubernetes endpoint'],
+    correctIndex: 0,
+    explanation: 'Docker\'s docs explicitly warn that exposing the daemon over network without TLS+client auth is equivalent to root access. Senior reports treat this as critical.',
+    distractorRationale: { 1: 'Far from safe.', 2: 'Read-write API.', 3: 'Distinct from k8s API.' },
+    source: { name: 'Docker — Protect the Docker daemon socket (TLS)', url: 'https://docs.docker.com/engine/security/protect-access/' },
+  },
+
+  {
+    id: 'net-052', topic: 'network', subtopic: 'kubernetes-api', difficulty: 'senior',
+    question: 'A Kubernetes API server reachable with anonymous access enables what for an attacker?',
+    choices: ['Querying cluster state, listing pods/secrets/serviceaccounts, and (if RBAC permits) creating workloads — leading to full cluster takeover. Mitigation: disable anonymous-auth, enforce RBAC with least privilege, audit `kubectl auth can-i --list --as=system:anonymous`', 'Nothing useful', 'Only metrics access', 'Only DNS queries'],
+    correctIndex: 0,
+    explanation: 'Anonymous-auth on the Kubernetes API server is a well-known misconfiguration. CIS Kubernetes benchmark recommends disabling it. Senior reports phrase impact in terms of RBAC mappings.',
+    distractorRationale: { 1: 'It is highly impactful.', 2: 'Beyond metrics.', 3: 'API supports many resources.' },
+    source: { name: 'Kubernetes — Authenticating (anonymous-auth)', url: 'https://kubernetes.io/docs/reference/access-authn-authz/authentication/#anonymous-requests' },
+  },
+
+  {
+    id: 'net-053', topic: 'network', subtopic: 'elasticsearch-unauth', difficulty: 'senior',
+    question: 'Pre-7.x Elasticsearch defaulted to no authentication. Why is that a critical finding when found in 2026?',
+    choices: ['Anyone reachable can read every index, search/dump data, and (with default config) execute scripted queries that run in the JVM. Mitigations: enable Elastic Security (X-Pack auth), bind to localhost, run behind a reverse proxy with auth. Senior reports note that "Elastic exposed" usually means PII at scale', 'It is encrypted by default', 'It requires Kerberos', 'It uses TLS only'],
+    correctIndex: 0,
+    explanation: 'Elasticsearch authentication has been free since v7+ but legacy deployments still run unauth. CISA and many breach reports cite exposed Elastic clusters as the proximate cause of leaked data sets.',
+    distractorRationale: { 1: 'Default was unencrypted.', 2: 'No Kerberos requirement.', 3: 'Optional.' },
+    source: { name: 'Elastic — Set up minimal security for Elasticsearch (basic auth)', url: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/security-minimal-setup.html' },
+  },
+
+  {
+    id: 'net-054', topic: 'network', subtopic: 'mongodb-unauth', difficulty: 'senior',
+    question: 'Unauthenticated MongoDB instances bound to 0.0.0.0 have driven mass-data leaks for years because:',
+    choices: ['Default MongoDB <2.6 had no authentication enabled; the bindIp was 0.0.0.0. Modern defaults bind to localhost (3.6+) and require auth, but many cloud images and ports remain exposed. Senior reports include a count of records / databases enumerable', 'MongoDB encrypts disk by default', 'MongoDB is over UDP', 'MongoDB requires Kerberos'],
+    correctIndex: 0,
+    explanation: 'MongoDB security defaults have hardened over time, but legacy / mis-deployed instances persist. MongoDB\'s security checklist documents required steps. Public scans (Shodan) consistently list thousands of exposed instances.',
+    distractorRationale: { 1: 'Disk encryption is feature-gated.', 2: 'TCP-based.', 3: 'No Kerberos requirement.' },
+    source: { name: 'MongoDB — Security Checklist', url: 'https://www.mongodb.com/docs/manual/administration/security-checklist/' },
+  },
+
+  {
+    id: 'net-055', topic: 'network', subtopic: 'tftp-exposure', difficulty: 'senior',
+    question: 'TFTP servers exposed in internal networks are a classic finding because:',
+    choices: ['TFTP has no authentication and is often used by network gear to fetch configs/firmware; an attacker can read existing files (router configs, often containing secrets) or upload malicious firmware. UDP-only, lossy, and trivially abused — modern best practice is to use SCP/SFTP and disable TFTP if not strictly required', 'TFTP encrypts by default', 'TFTP requires SAML', 'TFTP runs over TCP'],
+    correctIndex: 0,
+    explanation: 'TFTP\'s lack of authentication has been documented since RFC 1350. CISA, NIST and vendor docs all recommend retiring TFTP for sensitive transfers.',
+    distractorRationale: { 1: 'Cleartext.', 2: 'No SAML.', 3: 'UDP/69.' },
+    source: { name: 'IETF RFC 1350 — Trivial File Transfer Protocol', url: 'https://datatracker.ietf.org/doc/html/rfc1350' },
+  },
+
+  {
+    id: 'net-056', topic: 'network', subtopic: 'ipmi', difficulty: 'senior',
+    question: 'IPMI (Intelligent Platform Management Interface, BMC management) on UDP/623 has well-known weaknesses. The senior framing:',
+    choices: ['Multiple inherent weaknesses (CVE-2013-4786 cipher zero auth bypass, hash retrieval pre-auth, default vendor credentials) make exposed BMC management planes effectively bypassable. Recommendation: never expose BMC interfaces beyond a dedicated management VLAN, change default creds, disable cipher suite zero', 'IPMI is safely encrypted', 'IPMI requires TLS', 'IPMI uses Kerberos'],
+    correctIndex: 0,
+    explanation: 'CERT/CC and SANS have long flagged IPMI as a critical exposure. Vendor BMCs (Supermicro, HP iLO, Dell iDRAC) sit at firmware level — compromise is below the OS. Network segmentation is the only durable defence.',
+    distractorRationale: { 1: 'Encryption is broken or disabled in many configs.', 2: 'No TLS.', 3: 'No Kerberos.' },
+    source: { name: 'CERT/CC — IPMI Cipher Zero Authentication Bypass (VU#491239)', url: 'https://www.kb.cert.org/vuls/id/491239' },
+  },
+
+  {
+    id: 'net-057', topic: 'network', subtopic: 'cisa-kev', difficulty: 'senior',
+    question: 'When prioritising network-side findings during reporting, which authoritative list of "actively-exploited-in-the-wild" CVEs should a senior pentester reference?',
+    choices: ['CISA KEV (Known Exploited Vulnerabilities) catalog — vulnerabilities with documented in-the-wild exploitation. Senior reports cite KEV alongside CVSS to prioritise truly urgent items separately from theoretically high-severity ones', 'OWASP Top 10 only', 'NIST CSF maturity tiers', 'PCI DSS compliance map'],
+    correctIndex: 0,
+    explanation: 'CISA\'s KEV catalog is the de-facto reference for "this is being exploited right now". Many federal mandates require remediation within set windows for KEV entries. Senior reporting treats KEV as urgency context.',
+    distractorRationale: { 1: 'OWASP Top 10 is awareness, not exploitation telemetry.', 2: 'NIST CSF is maturity framework.', 3: 'PCI is compliance.' },
+    source: { name: 'CISA — Known Exploited Vulnerabilities Catalog', url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog' },
+  },
+
+  {
+    id: 'net-058', topic: 'network', subtopic: 'nessus-credentialed', difficulty: 'senior',
+    question: 'Why is a credentialed Nessus scan dramatically more useful than an uncredentialed one?',
+    choices: ['Credentialed scans authenticate to hosts via SSH/WMI/SMB and read installed-package versions, registry entries and config files directly, producing accurate vulnerability assessment with low false positives. Uncredentialed scans only see network responses, missing most patch-state information', 'They are slower and less accurate', 'They only work on Linux', 'They require IPv6'],
+    correctIndex: 0,
+    explanation: 'Tenable\'s docs and almost every senior assessment methodology recommend credentialed scans where possible. The CIS benchmarks and SANS materials concur.',
+    distractorRationale: { 1: 'They are more accurate.', 2: 'Cross-platform.', 3: 'IP version is unrelated.' },
+    source: { name: 'Tenable — Credentialed Checks vs Network-Based Assessments', url: 'https://docs.tenable.com/nessus/Content/CredentialedChecks.htm' },
+  },
+
+  {
+    id: 'net-059', topic: 'network', subtopic: 'ssl-labs', difficulty: 'senior',
+    question: 'When evaluating TLS configurations for a report, which authoritative scoring service is widely used as a baseline?',
+    choices: ['Qualys SSL Labs (and the open-source `testssl.sh` — for offline / segregated environments). Both produce graded reports referencing protocol, cipher, certificate and HSTS posture against modern best practices', 'Wireshark', 'Nmap only', 'Hashcat'],
+    correctIndex: 0,
+    explanation: 'SSL Labs\' grading is widely understood by stakeholders. testssl.sh covers the same ground locally. Senior reports often include SSL Labs grades as a quick summary.',
+    distractorRationale: { 1: 'Wireshark is a sniffer.', 2: 'Nmap has TLS NSE but no graded posture.', 3: 'Hashcat is for cracking.' },
+    source: { name: 'Qualys SSL Labs — Server Test', url: 'https://www.ssllabs.com/ssltest/' },
+  },
+
+  {
+    id: 'net-060', topic: 'network', subtopic: 'mitre-d3fend', difficulty: 'senior',
+    question: 'Beyond MITRE ATT&CK (which catalogs adversary techniques), what is MITRE D3FEND, and why does it matter for senior pentest reporting?',
+    choices: ['D3FEND is a knowledge graph of defensive countermeasures mapped to ATT&CK techniques. Senior reports that recommend mitigations alongside findings can cite D3FEND to show the corresponding defence and how it is supposed to disrupt the attacker action', 'A vulnerability scanner', 'A SIEM platform', 'A penetration testing distribution'],
+    correctIndex: 0,
+    explanation: 'D3FEND complements ATT&CK by catalog ing defences. Senior reports that pair a finding with both the ATT&CK technique it enables and the D3FEND mitigation it lacks demonstrate maturity beyond raw findings.',
+    distractorRationale: { 1: 'Not a scanner.', 2: 'Not a SIEM.', 3: 'Not a Linux distro.' },
+    source: { name: 'MITRE D3FEND — Knowledge Graph', url: 'https://d3fend.mitre.org/' },
+  },
 ];

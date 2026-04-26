@@ -441,4 +441,354 @@ window.QUESTION_BANK.mobile = [
     },
     source: { name: 'OWASP API Security Top 10', url: 'https://owasp.org/API-Security/editions/2023/en/0x00-header/' },
   },
+
+  {
+    id: 'mob-021', topic: 'mobile', subtopic: 'android-permissions-runtime', difficulty: 'senior',
+    question: 'On Android 6.0+ (API 23), dangerous permissions follow the runtime permission model. What is the senior implication for testing?',
+    choices: ['Permissions in the dangerous category (camera, location, contacts, microphone, etc.) require runtime grant by the user; install-time install no longer suffices. Senior testers verify that the app handles denial gracefully (no crashes), does not leak data when permission is missing, and respects revocation', 'All permissions are install-time', 'Permissions are signed by Google', 'Permissions are decided by the BIOS'],
+    correctIndex: 0,
+    explanation: 'Runtime permissions (introduced in M, expanded since) are documented in Android Developers. OWASP MASTG covers test cases for the model.',
+    distractorRationale: { 1: 'API 22 and below were install-time; modern is runtime for dangerous permissions.', 2: 'Google does not sign per-permission.', 3: 'BIOS is unrelated.' },
+    source: { name: 'Android Developers — Request app permissions (runtime permissions)', url: 'https://developer.android.com/training/permissions/requesting' },
+  },
+
+  {
+    id: 'mob-022', topic: 'mobile', subtopic: 'content-provider', difficulty: 'senior',
+    question: 'A `ContentProvider` is exported (`android:exported="true"`) without `android:permission` and without `<grant-uri-permissions>` constraints. Why is this dangerous?',
+    choices: ['Other apps can query, insert, update, or delete data via `content://<authority>/...` URIs without authentication. The senior recommendation is to set `exported="false"` (default since API 17 for providers without intent filters) or apply a signature-level permission', 'It causes a buffer overflow', 'It enables Bluetooth pairing', 'It disables the keyboard'],
+    correctIndex: 0,
+    explanation: 'OWASP MASTG\'s Android platform-interaction chapter covers exported providers. Many real-world data-leak findings are `content://` exposures of attached SQLite databases or file paths.',
+    distractorRationale: { 1: 'No memory corruption.', 2: 'No Bluetooth involvement.', 3: 'No keyboard involvement.' },
+    source: { name: 'Android Developers — Provider element (exported)', url: 'https://developer.android.com/guide/topics/manifest/provider-element' },
+  },
+
+  {
+    id: 'mob-023', topic: 'mobile', subtopic: 'broadcast-receiver', difficulty: 'senior',
+    question: 'An app registers a `BroadcastReceiver` with `android:exported="true"` that triggers a privileged action. What attack does this enable?',
+    choices: ['Other apps can send intents to the receiver, triggering the privileged action without permission. Mitigation: set `exported="false"` for receivers that do not need cross-app reach, or require a signature-level permission so only the app\'s own components can invoke it', 'It leaks credentials over Bluetooth', 'It bypasses TLS', 'It causes battery drain only'],
+    correctIndex: 0,
+    explanation: 'Receiver-based attacks are a frequent OWASP MASTG finding. Android docs recommend `exported="false"` for internal receivers and explicit permission gating for external ones.',
+    distractorRationale: { 1: 'No Bluetooth involvement.', 2: 'Unrelated to TLS.', 3: 'Not a battery issue.' },
+    source: { name: 'Android Developers — Receiver element (exported)', url: 'https://developer.android.com/guide/topics/manifest/receiver-element' },
+  },
+
+  {
+    id: 'mob-024', topic: 'mobile', subtopic: 'implicit-vs-explicit-intents', difficulty: 'senior',
+    question: 'For sensitive cross-component navigation, why does Android development guidance prefer explicit intents over implicit intents?',
+    choices: ['Explicit intents target a specific component by ClassName/ComponentName; implicit intents broadcast intent filters and any matching app may handle them, including malicious ones (intent redirection). Explicit intents prevent intent hijacking for sensitive flows', 'Explicit intents are encrypted', 'Implicit intents always require root', 'Explicit intents work only on iOS'],
+    correctIndex: 0,
+    explanation: 'OWASP MASTG and Android docs both emphasise explicit intents for sensitive flows. The risk is that a malicious app registers a matching intent filter and is selected as the handler.',
+    distractorRationale: { 1: 'Neither variant is encrypted by default.', 2: 'No root requirement.', 3: 'Android-only construct.' },
+    source: { name: 'Android Developers — Intents and Intent Filters (explicit intents)', url: 'https://developer.android.com/guide/components/intents-filters' },
+  },
+
+  {
+    id: 'mob-025', topic: 'mobile', subtopic: 'strandhogg', difficulty: 'senior',
+    question: 'StrandHogg (CVE-2020-0096) is which class of attack on Android?',
+    choices: ['Task affinity / task hijacking — a malicious app sets `taskAffinity` to match a target app and uses `allowTaskReparenting`/`singleTask` flags so when the user launches the target, the malicious activity appears in its task stack instead, enabling phishing of credentials', 'A buffer overflow in the kernel', 'An SSL pinning bypass', 'A keyboard-cache leak'],
+    correctIndex: 0,
+    explanation: 'Promon\'s StrandHogg research and the follow-up StrandHogg 2.0 exploited Android\'s task model. Google patched the underlying behaviour in subsequent Android releases. OWASP MASTG covers task-hijack patterns.',
+    distractorRationale: { 1: 'Not a memory bug.', 2: 'Not pinning related.', 3: 'Not keyboard-cache.' },
+    source: { name: 'Promon — StrandHogg vulnerability disclosure', url: 'https://promon.io/security-news/strandhogg' },
+  },
+
+  {
+    id: 'mob-026', topic: 'mobile', subtopic: 'android-allowbackup', difficulty: 'senior',
+    question: '`android:allowBackup="true"` (or default true on API < 31) enables what, and why is it a finding?',
+    choices: ['Auto Backup includes the app\'s data in cloud / `adb backup` extracts. Sensitive app data may be exfiltrated via a USB-connected device with debugging enabled, or via a compromised Google account. Recommendation: set `android:allowBackup="false"` (or use `fullBackupOnly` rules) for apps holding sensitive data', 'It enables clipboard sharing', 'It runs the app in safe mode', 'It disables HTTPS'],
+    correctIndex: 0,
+    explanation: 'OWASP MASTG\'s storage chapter and Android docs both flag this. Many financial apps explicitly disable backups for sensitive data.',
+    distractorRationale: { 1: 'Clipboard is a different surface.', 2: 'No safe-mode behaviour.', 3: 'HTTPS is unrelated.' },
+    source: { name: 'Android Developers — Application element (allowBackup)', url: 'https://developer.android.com/guide/topics/manifest/application-element#allowbackup' },
+  },
+
+  {
+    id: 'mob-027', topic: 'mobile', subtopic: 'webview-allowfileaccess', difficulty: 'senior',
+    question: 'A WebView calls `setAllowFileAccessFromFileURLs(true)` and loads attacker-influenced content. What does this enable?',
+    choices: ['JavaScript running in a `file://` URL can read other local files via XHR (e.g., the app\'s SharedPreferences, databases) — a same-origin policy relaxation that defeats the WebView sandbox. Modern Android defaults this to false; senior testers flag any app that re-enables it', 'It enables Bluetooth audio', 'It runs WebView in safe mode', 'It enforces TLS pinning'],
+    correctIndex: 0,
+    explanation: 'Android docs document setAllowFileAccessFromFileURLs and setAllowUniversalAccessFromFileURLs as historical compatibility flags that should remain false. Many CVEs trace back to apps re-enabling them.',
+    distractorRationale: { 1: 'Bluetooth is unrelated.', 2: 'No safe-mode mechanic.', 3: 'TLS pinning is separate.' },
+    source: { name: 'Android Developers — WebSettings.setAllowFileAccessFromFileURLs', url: 'https://developer.android.com/reference/android/webkit/WebSettings#setAllowFileAccessFromFileURLs(boolean)' },
+  },
+
+  {
+    id: 'mob-028', topic: 'mobile', subtopic: 'flag-secure', difficulty: 'senior',
+    question: 'Setting `WindowManager.LayoutParams.FLAG_SECURE` on a sensitive Android Activity does what?',
+    choices: ['Prevents screenshots and screen recording (including by the OS\'s Recents view) and blocks the window from being captured on non-secure outputs (Miracast etc.). Recommendation: set on screens displaying sensitive data such as banking or password fields', 'It encrypts the activity', 'It runs the activity in an isolated user', 'It disables Wi-Fi'],
+    correctIndex: 0,
+    explanation: 'FLAG_SECURE is documented in Android Developers and recommended by OWASP MASTG for any screen displaying secrets. It is a defence in depth, not a strong security control alone.',
+    distractorRationale: { 1: 'No encryption involved.', 2: 'No isolation.', 3: 'No Wi-Fi effect.' },
+    source: { name: 'Android Developers — WindowManager.LayoutParams.FLAG_SECURE', url: 'https://developer.android.com/reference/android/view/WindowManager.LayoutParams#FLAG_SECURE' },
+  },
+
+  {
+    id: 'mob-029', topic: 'mobile', subtopic: 'ios-data-protection', difficulty: 'senior',
+    question: 'iOS Data Protection classes determine when files are accessible. Which class provides the strongest protection?',
+    choices: ['NSFileProtectionComplete — the file is encrypted with a key derived from the user passcode and Secure Enclave, available only when the device is unlocked. Reads while locked fail. Used for the most sensitive data; default for many app sandbox files', 'NSFileProtectionNone (no protection)', 'NSFileProtectionPublic', 'NSFileProtectionMaximum'],
+    correctIndex: 0,
+    explanation: 'Apple\'s File Protection documentation enumerates the classes (Complete, CompleteUnlessOpen, CompleteUntilFirstUserAuthentication, None). Complete is strongest. OWASP MASTG iOS chapter discusses choosing the right class.',
+    distractorRationale: { 1: 'No protection is the weakest.', 2: 'Not a real class name.', 3: 'Not a real class name.' },
+    source: { name: 'Apple Developer — File Protection (NSFileProtectionType)', url: 'https://developer.apple.com/documentation/foundation/nsfileprotectiontype' },
+  },
+
+  {
+    id: 'mob-030', topic: 'mobile', subtopic: 'ios-keychain-access-groups', difficulty: 'senior',
+    question: 'iOS Keychain access groups allow what, and what is the senior risk?',
+    choices: ['Multiple apps with the same Team ID and a shared keychain access group can read each other\'s items — designed for app-suites. Risk: if a less-secure companion app in the same access group is compromised, sensitive items shared into the group are exposed. Recommendation: scope items narrowly, do not share unless required', 'Keychain access groups encrypt the items', 'They store items on iCloud only', 'They disable the Secure Enclave'],
+    correctIndex: 0,
+    explanation: 'Apple\'s Keychain documentation explains access group sharing. OWASP MASTG iOS data-storage chapter calls out audit of access groups.',
+    distractorRationale: { 1: 'Encryption is a Keychain property, not the access group.', 2: 'iCloud Keychain is separate.', 3: 'Secure Enclave is independent.' },
+    source: { name: 'Apple Developer — Sharing access to keychain items among a collection of apps', url: 'https://developer.apple.com/documentation/security/keychain_services/keychain_items/sharing_access_to_keychain_items_among_a_collection_of_apps' },
+  },
+
+  {
+    id: 'mob-031', topic: 'mobile', subtopic: 'drozer', difficulty: 'senior',
+    question: 'Drozer is a:',
+    choices: ['Mobile (Android) attack/assessment framework: lets you probe IPC surface, content providers, exported activities/services, intent fuzzing, and SQLi against ContentProviders. Useful for IPC-side reconnaissance from a single command-line', 'Network sniffer', 'Wi-Fi cracker', 'iOS jailbreaking tool'],
+    correctIndex: 0,
+    explanation: 'WithSecure Labs maintains drozer; it has been a long-standing Android-pentest tool. The repository docs walk through modules.',
+    distractorRationale: { 1: 'Not a sniffer.', 2: 'Not Wi-Fi.', 3: 'Android, not iOS.' },
+    source: { name: 'WithSecure Labs — drozer GitHub', url: 'https://github.com/WithSecureLabs/drozer' },
+  },
+
+  {
+    id: 'mob-032', topic: 'mobile', subtopic: 'trustkit', difficulty: 'senior',
+    question: 'TrustKit is a:',
+    choices: ['Mobile (iOS/Android) library that simplifies and standardises TLS pinning configuration, with reporting hooks. Used by apps to pin certificates without writing low-level pinning code. Senior testers verify that pins match the actual leaf/intermediate/SPKI of the production cert', 'A web framework', 'A jailbreak tool', 'A logging library'],
+    correctIndex: 0,
+    explanation: 'TrustKit is an open-source pinning library by Datatheorem, used widely. The README describes pin formats, fallback policies, and reporting.',
+    distractorRationale: { 1: 'Not a web framework.', 2: 'Not a jailbreak.', 3: 'Not a logger.' },
+    source: { name: 'Datatheorem — TrustKit GitHub', url: 'https://github.com/datatheorem/TrustKit' },
+  },
+
+  {
+    id: 'mob-033', topic: 'mobile', subtopic: 'aab-bundle', difficulty: 'senior',
+    question: 'Android App Bundle (.aab) is the modern publishing format on Play Store. What does it change for testers?',
+    choices: ['Apps are uploaded as bundles; Google generates the actual APKs (`split APKs`) for each device. To analyse an installed app you usually pull the active split APKs from the device or use bundletool to generate APKs from the .aab. Single monolithic .apk extraction may miss feature modules', 'Bundles are unencrypted text', 'Bundles run in a VM only', 'Bundles disable Frida'],
+    correctIndex: 0,
+    explanation: 'Android Developers documents the bundle model and `bundletool`. Senior mobile testers update their tooling to support split APKs (apktool, jadx, MobSF all handle aab/splits today).',
+    distractorRationale: { 1: 'They are zip-archive based with binary content.', 2: 'They run on the device.', 3: 'Frida works regardless.' },
+    source: { name: 'Android Developers — About Android App Bundles', url: 'https://developer.android.com/guide/app-bundle' },
+  },
+
+  {
+    id: 'mob-034', topic: 'mobile', subtopic: 'r8-shrinking', difficulty: 'senior',
+    question: 'R8 (Android\'s default code shrinker since AGP 3.4) does what, and how does it relate to ProGuard?',
+    choices: ['R8 replaces ProGuard for shrinking, optimisation, obfuscation, and dexing — performing all four in one pass with better optimisations. ProGuard configuration files (`-keep`, etc.) are still used. Senior framing: like ProGuard, R8 is defence-in-depth, not a confidentiality control', 'R8 disables Frida', 'R8 enables FLAG_SECURE', 'R8 is iOS-specific'],
+    correctIndex: 0,
+    explanation: 'Android Developers documents R8 as the modern shrinker; OWASP MASTG covers it under MASVS-RESILIENCE.',
+    distractorRationale: { 1: 'No effect on Frida.', 2: 'FLAG_SECURE is a separate UI flag.', 3: 'Android-only.' },
+    source: { name: 'Android Developers — Shrink, obfuscate, and optimize your app (R8)', url: 'https://developer.android.com/build/shrink-code' },
+  },
+
+  {
+    id: 'mob-035', topic: 'mobile', subtopic: 'ios-encrypted-backup', difficulty: 'senior',
+    question: 'iOS encrypted backups via Finder/iTunes change forensic accessibility how?',
+    choices: ['Encrypted backups (with a user-set password) include data NOT in unencrypted backups (Health, Activity, Wi-Fi passwords, Saved Safari data). The encryption is AES with a key derived from the user-set backup password — recoverable via password attacks. Senior framing: encrypted backups can leak more sensitive data IF the password is weak, but also protect against trivial extraction', 'They are quantum-encrypted', 'They are stored only on iCloud', 'They use Touch ID only'],
+    correctIndex: 0,
+    explanation: 'Apple Support documents the difference between encrypted and unencrypted backups. Tools like Elcomsoft / iLeapp / Cellebrite leverage password recovery against weak passwords. OWASP MASTG covers the testing implications.',
+    distractorRationale: { 1: 'Standard AES.', 2: 'Local backups exist alongside iCloud.', 3: 'Touch ID is for device unlock.' },
+    source: { name: 'Apple Support — About encrypted backups in iTunes', url: 'https://support.apple.com/en-us/HT205220' },
+  },
+
+  {
+    id: 'mob-036', topic: 'mobile', subtopic: 'shared-user-id', difficulty: 'senior',
+    question: 'Why is `android:sharedUserId` deprecated, and what is the senior security framing?',
+    choices: ['sharedUserId let multiple apps signed by the same key share a Linux UID and thus filesystem permissions, but it produced upgrade/rollback hazards and is deprecated since API 29. Senior testers flag any new app using it as a finding because it expands attack surface across apps', 'It is the only way to share data', 'It is required for Bluetooth', 'It is unique to Wear OS'],
+    correctIndex: 0,
+    explanation: 'Android Developers documents the deprecation. Modern alternatives use ContentProviders or BroadcastReceivers with signature permissions.',
+    distractorRationale: { 1: 'Other mechanisms exist.', 2: 'Bluetooth is unrelated.', 3: 'Not Wear-only.' },
+    source: { name: 'Android Developers — Manifest sharedUserId (deprecated)', url: 'https://developer.android.com/guide/topics/manifest/manifest-element#uid' },
+  },
+
+  {
+    id: 'mob-037', topic: 'mobile', subtopic: 'android-encrypted-shared-prefs', difficulty: 'senior',
+    question: 'What does `EncryptedSharedPreferences` from `androidx.security.crypto` provide?',
+    choices: ['SharedPreferences-compatible API that transparently encrypts keys (AES-256 SIV) and values (AES-256 GCM) using master keys held in the Android Keystore. A reasonable choice for sensitive data when you need a SharedPreferences-shaped API but want at-rest protection', 'Plain unencrypted storage', 'Storage on Google\'s servers', 'A SQL database'],
+    correctIndex: 0,
+    explanation: 'Jetpack Security / androidx.security.crypto provides EncryptedSharedPreferences and EncryptedFile. Android Developers documents the key schemes.',
+    distractorRationale: { 1: 'It is encrypted.', 2: 'Stored locally.', 3: 'Not SQLite.' },
+    source: { name: 'Android Developers — EncryptedSharedPreferences', url: 'https://developer.android.com/reference/androidx/security/crypto/EncryptedSharedPreferences' },
+  },
+
+  {
+    id: 'mob-038', topic: 'mobile', subtopic: 'frida-gadget', difficulty: 'senior',
+    question: 'Frida Gadget enables what use case?',
+    choices: ['Inject Frida\'s instrumentation library into an app at build/repackage time so it can be controlled without root/jailbreak (because the app loads the gadget itself as a "regular" library). Useful for testing on stock devices when the app can be re-signed/installed via developer profile', 'It encrypts the app', 'It signs APKs', 'It blocks Frida'],
+    correctIndex: 0,
+    explanation: 'Frida\'s docs describe Gadget as the embedded counterpart of the daemon-based `frida-server`. It lets testers operate on non-rooted/non-jailbroken devices when re-signing is possible.',
+    distractorRationale: { 1: 'No encryption.', 2: 'Not a signer.', 3: 'It is the opposite — Frida itself.' },
+    source: { name: 'Frida — Gadget documentation', url: 'https://frida.re/docs/gadget/' },
+  },
+
+  {
+    id: 'mob-039', topic: 'mobile', subtopic: 'mobile-rate-limit', difficulty: 'senior',
+    question: 'OWASP API Security Top 10 (2023) places "Unrestricted Resource Consumption" at #4. Which mobile-API testing observation maps directly to it?',
+    choices: ['No rate limit / no anti-automation on sensitive endpoints (login, OTP send, pricing) called from the mobile client. Mobile clients trust the API to enforce limits — testers should send bursts and concurrent requests to surface missing controls', 'Mobile apps should rate-limit themselves', 'iOS handles rate limiting via FaceID', 'Android disables retry after 3 attempts globally'],
+    correctIndex: 0,
+    explanation: 'API4:2023 covers resource consumption / rate limiting. Mobile testing pairs naturally with API testing for this. OWASP MASTG\'s API testing chapter ties them together.',
+    distractorRationale: { 1: 'Client-side rate-limiting can be bypassed.', 2: 'FaceID is biometric, not rate-limiting.', 3: 'No global retry limit.' },
+    source: { name: 'OWASP API Security Top 10 — API4:2023 Unrestricted Resource Consumption', url: 'https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/' },
+  },
+
+  {
+    id: 'mob-040', topic: 'mobile', subtopic: 'ios-uipasteboard', difficulty: 'senior',
+    question: 'Apps that copy sensitive data (e.g., one-time passwords, recovery seeds) to `UIPasteboard.general` create which risk?',
+    choices: ['Other apps can read the system pasteboard; iOS shows a banner since iOS 14 indicating which app accessed it. Senior recommendation: avoid system pasteboard for sensitive data, or use named pasteboards with limited lifetime, or set the `expirationDate` on UIPasteboard items (iOS 10+)', 'Pasteboard is sandbox-isolated', 'Pasteboard requires Face ID', 'Pasteboard is end-to-end encrypted'],
+    correctIndex: 0,
+    explanation: 'iOS\'s general pasteboard is shared. Apple\'s documentation discusses pasteboard scoping (named pasteboards, expirationDate). OWASP MASTG covers pasteboard data leakage tests.',
+    distractorRationale: { 1: 'It is shared by design.', 2: 'No biometric required.', 3: 'Not e2e encrypted.' },
+    source: { name: 'Apple Developer — UIPasteboard', url: 'https://developer.apple.com/documentation/uikit/uipasteboard' },
+  },
+
+  {
+    id: 'mob-041', topic: 'mobile', subtopic: 'ios-mach-o', difficulty: 'senior',
+    question: 'iOS app binaries are in Mach-O format. Why might an attacker run `class-dump` or `otool` against a Mach-O?',
+    choices: ['To extract Objective-C class metadata (selectors, properties, ivars) and inspect imports/strings. Reveals API endpoints, hardcoded keys, anti-debugging routines, and class structures useful for hooking with Frida. Caveat: Swift-only apps expose less metadata than Objective-C ones', 'To compile to Java', 'To convert to ELF', 'To verify Apple\'s signature'],
+    correctIndex: 0,
+    explanation: 'Mach-O is documented in Apple\'s ABI references; tools like class-dump and otool expose metadata. OWASP MASTG iOS reverse-engineering chapter covers them.',
+    distractorRationale: { 1: 'Not a Java compiler.', 2: 'No format conversion.', 3: 'Apple signature verification is `codesign`.' },
+    source: { name: 'Apple Developer — Mach-O File Format Reference', url: 'https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/0-Introduction/introduction.html' },
+  },
+
+  {
+    id: 'mob-042', topic: 'mobile', subtopic: 'ios-debugger-detection', difficulty: 'senior',
+    question: 'A common iOS anti-debug technique calls `ptrace(PT_DENY_ATTACH)`. What does this do, and what is the senior framing?',
+    choices: ['Asks the kernel to deny future debugger attaches to the process. It is bypassable (LLDB workarounds, Frida, runtime patching) and falls under MASVS-RESILIENCE — defence in depth, not a primary control. Senior reports treat it as a tampering signal, not a confidentiality control', 'It encrypts the binary', 'It is unbreakable', 'It enables Touch ID'],
+    correctIndex: 0,
+    explanation: 'PT_DENY_ATTACH is a long-standing iOS anti-debug primitive. The OWASP MASTG documents many bypasses and clarifies its role as resilience.',
+    distractorRationale: { 1: 'No encryption.', 2: 'Bypassable.', 3: 'No biometric tie-in.' },
+    source: { name: 'OWASP MASTG — iOS Anti-Reversing (PT_DENY_ATTACH)', url: 'https://mas.owasp.org/MASTG/0x06j-Testing-Resiliency-Against-Reverse-Engineering/' },
+  },
+
+  {
+    id: 'mob-043', topic: 'mobile', subtopic: 'cert-transparency', difficulty: 'senior',
+    question: 'How does Certificate Transparency (CT) protect mobile apps using public-CA certificates?',
+    choices: ['Browsers and recent OSes require certificates to be logged in CT logs (RFC 6962); misissued certs become publicly visible and revocable quickly. For mobile apps using TLS pinning, CT plus pinning combines two layers — but apps that pin to the leaf must rotate carefully when CAs reissue', 'CT is a backup mechanism', 'CT replaces TLS', 'CT is ICS-only'],
+    correctIndex: 0,
+    explanation: 'RFC 6962 / CT framework provides public auditability for issued certs. Apple and Google require CT-logged certs for many use cases. OWASP MASTG covers the relationship with TLS pinning.',
+    distractorRationale: { 1: 'Active control, not backup.', 2: 'Complements TLS.', 3: 'IT and mobile context.' },
+    source: { name: 'IETF RFC 6962 — Certificate Transparency', url: 'https://datatracker.ietf.org/doc/html/rfc6962' },
+  },
+
+  {
+    id: 'mob-044', topic: 'mobile', subtopic: 'webview-savePassword', difficulty: 'senior',
+    question: '`WebView.setSavePassword(true)` (deprecated since API 18) historically did what?',
+    choices: ['Persisted form passwords in plaintext in the WebView database — readable by any app on a rooted device or via `adb backup`. Modern Android removed the API; senior testers ensure no legacy code paths still call it and that any custom autofill stores credentials securely (e.g., Keystore-backed)', 'Encrypted passwords with Touch ID', 'Sent passwords to Google', 'Encrypted using TPM'],
+    correctIndex: 0,
+    explanation: 'Android docs marked savePassword deprecated and removed it; OWASP MASTG references it under storage findings.',
+    distractorRationale: { 1: 'No biometric tie.', 2: 'No upload.', 3: 'No TPM tie.' },
+    source: { name: 'Android Developers — WebSettings.setSavePassword (deprecated)', url: 'https://developer.android.com/reference/android/webkit/WebSettings#setSavePassword(boolean)' },
+  },
+
+  {
+    id: 'mob-045', topic: 'mobile', subtopic: 'android-app-links', difficulty: 'senior',
+    question: 'Android App Links (since API 23) verify ownership of a domain to claim deep links. How is verification performed?',
+    choices: ['The site hosts a `/.well-known/assetlinks.json` file declaring the package name and signing certificate fingerprints; Android verifies this at install time and at periodic intervals. Verified App Links open without disambiguation dialogs and resist link-hijacking by other apps', 'Via DNS TXT only', 'Via Google manual approval', 'Via SMTP DKIM'],
+    correctIndex: 0,
+    explanation: 'Android Developers documents App Links and the assetlinks.json mechanism. OWASP MASTG covers them when reviewing mobile-API integration.',
+    distractorRationale: { 1: 'DNS TXT alone is insufficient.', 2: 'Automated.', 3: 'Email auth, unrelated.' },
+    source: { name: 'Android Developers — Verify Android App Links', url: 'https://developer.android.com/training/app-links/verify-site-associations' },
+  },
+
+  {
+    id: 'mob-046', topic: 'mobile', subtopic: 'ios-universal-links', difficulty: 'senior',
+    question: 'iOS Universal Links work by:',
+    choices: ['Hosting an `apple-app-site-association` (AASA) file at `/.well-known/apple-app-site-association` on the domain, declaring which paths the app handles. iOS fetches the AASA at install time. If verification succeeds, opening matching URLs goes directly to the app — bypassing custom URL scheme hijacks', 'A DNS CAA record', 'Apple manual review', 'TXT records'],
+    correctIndex: 0,
+    explanation: 'Apple\'s Universal Links documentation describes AASA and the verification flow. OWASP MASTG iOS chapter reviews testing implications.',
+    distractorRationale: { 1: 'CAA is for cert issuance.', 2: 'Automated.', 3: 'TXT is for various uses.' },
+    source: { name: 'Apple Developer — Allowing apps and websites to link to your content (Universal Links)', url: 'https://developer.apple.com/documentation/xcode/allowing-apps-and-websites-to-link-to-your-content' },
+  },
+
+  {
+    id: 'mob-047', topic: 'mobile', subtopic: 'android-selinux', difficulty: 'senior',
+    question: 'Android implements SELinux in enforcing mode since 5.0. What does this mean for app security?',
+    choices: ['Mandatory Access Control on top of the Linux DAC (UIDs/GIDs); each process runs in a defined SELinux domain that constrains which kernel objects it can access (file labels, sockets, properties). Sandbox escapes that bypass DAC still hit SELinux. Senior context: many post-exploitation primitives chain DAC bypass with SELinux policy weaknesses', 'It is GUI-only', 'It is iOS-only', 'It is opt-in for apps'],
+    correctIndex: 0,
+    explanation: 'AOSP / Android Open Source Project documents SELinux extensively. Modern Android security relies on layered DAC + MAC + the SE for Android policy.',
+    distractorRationale: { 1: 'Kernel feature, not GUI.', 2: 'Android.', 3: 'System-wide, not per-app.' },
+    source: { name: 'AOSP — Security-Enhanced Linux (SELinux) in Android', url: 'https://source.android.com/docs/security/features/selinux' },
+  },
+
+  {
+    id: 'mob-048', topic: 'mobile', subtopic: 'mobile-anti-tamper', difficulty: 'senior',
+    question: 'OWASP MASVS-RESILIENCE includes integrity checks. What is the senior reading on their value?',
+    choices: ['Anti-tamper integrity checks (file hashes, signature verification, anti-Frida hooks) raise the cost of attack but are bypassable with sufficient effort; they are appropriate for high-value targets but should NEVER substitute for server-side trust decisions. Apps must assume the client can lie', 'They are unbreakable', 'They eliminate need for server-side authentication', 'They are required by law for all apps'],
+    correctIndex: 0,
+    explanation: 'MASVS-RESILIENCE explicitly frames these as defence in depth. OWASP MASTG documents many bypasses. The maxim "never trust the client" still holds.',
+    distractorRationale: { 1: 'Bypassable.', 2: 'Server-side trust still required.', 3: 'No universal legal mandate.' },
+    source: { name: 'OWASP MASVS — Resilience requirements', url: 'https://mas.owasp.org/MASVS/12-MASVS-RESILIENCE/' },
+  },
+
+  {
+    id: 'mob-049', topic: 'mobile', subtopic: 'mobile-jb-detect', difficulty: 'senior',
+    question: 'Common iOS jailbreak detection checks include:',
+    choices: ['File existence (`/Applications/Cydia.app`, `/private/var/lib/apt/`), URL scheme `cydia://`, fork() success, write outside the sandbox, and dyld inspection for jailbreak tweaks. Each is independently bypassable (Frida hooks, custom Objection scripts, Liberty Lite) — combine multiple checks for a slowdown effect, but accept they are resilience, not security', 'TPM attestation', 'Apple Pay status', 'iCloud sync state'],
+    correctIndex: 0,
+    explanation: 'OWASP MASTG iOS resiliency chapter and Frida\'s ios anti-jailbreak bypass scripts catalog the common checks and their bypasses.',
+    distractorRationale: { 1: 'iOS uses Secure Enclave; TPM is not the term.', 2: 'Apple Pay is independent.', 3: 'iCloud is unrelated.' },
+    source: { name: 'OWASP MASTG — iOS Anti-Reversing Defenses', url: 'https://mas.owasp.org/MASTG/0x06j-Testing-Resiliency-Against-Reverse-Engineering/' },
+  },
+
+  {
+    id: 'mob-050', topic: 'mobile', subtopic: 'ios-app-extensions', difficulty: 'senior',
+    question: 'iOS App Extensions (share, action, today widget, custom keyboard) introduce attack surface because:',
+    choices: ['Extensions run in their own process with their own entitlements but share the App Group container. A malicious or hijacked extension can read shared keychain items / files in the App Group. Senior reports check what each extension touches and whether its risk profile matches the host app', 'Extensions cannot be debugged', 'Extensions run with root', 'Extensions are required for App Store submission'],
+    correctIndex: 0,
+    explanation: 'Apple\'s App Extensions guide and OWASP MASTG iOS chapter cover extension security. The shared App Group container is the typical leakage vector.',
+    distractorRationale: { 1: 'Debuggable.', 2: 'No root on iOS.', 3: 'Optional.' },
+    source: { name: 'Apple Developer — App Extension Programming Guide', url: 'https://developer.apple.com/library/archive/documentation/General/Conceptual/ExtensibilityPG/' },
+  },
+
+  {
+    id: 'mob-051', topic: 'mobile', subtopic: 'webview-mixed-content', difficulty: 'senior',
+    question: 'On Android, `WebView.setMixedContentMode(MIXED_CONTENT_ALWAYS_ALLOW)` enables what risk?',
+    choices: ['HTTPS pages loaded in the WebView can include subresources over HTTP, which bypasses the protection HTTPS provides for the page. Recommendation: always use `MIXED_CONTENT_NEVER_ALLOW`. Modern Android defaults to never-allow on API 21+', 'It enables push notifications', 'It enforces HSTS', 'It is required for video playback'],
+    correctIndex: 0,
+    explanation: 'Android Developers documents the mixed-content modes. OWASP MASTG\'s network testing chapter flags any app that downgrades to ALWAYS_ALLOW.',
+    distractorRationale: { 1: 'Not push-related.', 2: 'Opposite — it weakens HTTPS.', 3: 'Video playback is unrelated.' },
+    source: { name: 'Android Developers — WebSettings.setMixedContentMode', url: 'https://developer.android.com/reference/android/webkit/WebSettings#setMixedContentMode(int)' },
+  },
+
+  {
+    id: 'mob-052', topic: 'mobile', subtopic: 'mobile-screen-record', difficulty: 'senior',
+    question: 'On iOS, what mechanism does an app use to detect that screen recording or AirPlay mirroring is active, and why is this useful?',
+    choices: ['`UIScreen.main.isCaptured` (and `.captureDidChangeNotification`) tells the app when the screen is being captured. Apps holding sensitive data may obscure content during capture. Senior framing: this is a UI/UX-level mitigation, not a guarantee — screenshots can still be taken via OS controls or jailbroken hooks', 'It uses Touch ID', 'It calls a kernel API directly', 'It is impossible to detect'],
+    correctIndex: 0,
+    explanation: 'Apple\'s UIScreen documentation describes captured state. OWASP MASTG iOS storage chapter recommends obscuring sensitive content during capture for high-risk apps.',
+    distractorRationale: { 1: 'No biometric tie.', 2: 'High-level UIKit API.', 3: 'It is detectable in many cases.' },
+    source: { name: 'Apple Developer — UIScreen.isCaptured', url: 'https://developer.apple.com/documentation/uikit/uiscreen/2921651-iscaptured' },
+  },
+
+  {
+    id: 'mob-053', topic: 'mobile', subtopic: 'mobile-asvs-mapping', difficulty: 'senior',
+    question: 'When an enterprise asks for a "comprehensive mobile security baseline" beyond top-10 awareness, the senior recommendation is to map findings to:',
+    choices: ['OWASP MASVS — verifiable security requirements with L1 / L2 maturity levels for mobile apps; complemented by MASTG (testing guide). Together they give a verifiable, testable baseline (analogous to ASVS for web)', 'OWASP Mobile Top 10 only', 'PCI DSS only', 'CIS only'],
+    correctIndex: 0,
+    explanation: 'MASVS is the verification standard; Mobile Top 10 is awareness/risk. Senior reports cite MASVS controls when scoping a baseline.',
+    distractorRationale: { 1: 'Top 10 is awareness.', 2: 'PCI is payments.', 3: 'CIS is general infra.' },
+    source: { name: 'OWASP MASVS — Mobile Application Security Verification Standard', url: 'https://mas.owasp.org/MASVS/' },
+  },
+
+  {
+    id: 'mob-054', topic: 'mobile', subtopic: 'mobile-magisk', difficulty: 'senior',
+    question: 'Magisk is a popular "systemless" rooting solution on Android. Why is it relevant to senior mobile testing?',
+    choices: ['Systemless root + Magisk Hide / DenyList lets an attacker (or tester) gain root while presenting an unrooted appearance to apps that perform integrity checks via Play Integrity / SafetyNet. Senior reports note that Play Integrity checks alone are not sufficient as anti-tamper because Magisk-style bypass is tractable', 'Magisk encrypts the kernel', 'Magisk replaces SELinux', 'Magisk is iOS-only'],
+    correctIndex: 0,
+    explanation: 'Magisk\'s GitHub and the long-running cat-and-mouse with SafetyNet/Play Integrity is well documented. Senior testers know root-detection alone (without server-side anomaly correlation) is brittle.',
+    distractorRationale: { 1: 'No kernel encryption.', 2: 'SELinux still present.', 3: 'Android.' },
+    source: { name: 'Magisk — official GitHub repository', url: 'https://github.com/topjohnwu/Magisk' },
+  },
+
+  {
+    id: 'mob-055', topic: 'mobile', subtopic: 'play-integrity', difficulty: 'senior',
+    question: 'Google\'s Play Integrity API (successor to SafetyNet Attestation) provides:',
+    choices: ['Server-side verifiable verdicts about device, app, and account integrity (e.g., MEETS_DEVICE_INTEGRITY, MEETS_BASIC_INTEGRITY, MEETS_STRONG_INTEGRITY), signed by Google. Senior framing: it raises the bar for cheaters / tamperers but is not unbreakable; treat verdicts as one signal in a layered defence', 'Encryption for the entire APK', 'Free unlimited backups', 'A device-firewall API'],
+    correctIndex: 0,
+    explanation: 'Play Integrity is documented in Android Developers. SafetyNet Attestation is being deprecated. OWASP MASTG covers integrity attestation as part of MASVS-RESILIENCE.',
+    distractorRationale: { 1: 'It is a verdict service.', 2: 'No backup feature.', 3: 'Not a firewall.' },
+    source: { name: 'Android Developers — Play Integrity API', url: 'https://developer.android.com/google/play/integrity' },
+  },
 ];

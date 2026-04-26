@@ -32,14 +32,14 @@ Then go to <http://localhost:8000/>.
 - Progress is stored in `localStorage`. Press `R` (anywhere on the page) to
   reset everything.
 
-## Topic breakdown (100 questions)
+## Topic breakdown (250 questions)
 
 | Topic | Count | Authority sources |
 |---|---|---|
-| Web app | 30 | PortSwigger Web Security Academy, OWASP Top 10, OWASP Testing Guide v4, OWASP ASVS, OWASP cheat sheets, OWASP API Top 10 |
-| Active Directory | 25 | MITRE ATT&CK, Microsoft Learn (Kerberos / NTLM / ADCS / LAPS / gMSA / Credential Guard), SpecterOps research, ADSecurity (Sean Metcalf) |
-| Network | 25 | Nmap official docs, Microsoft Learn, MITRE ATT&CK, NIST SP 800-115 / 800-82 / 800-52, CIS Benchmarks, vendor docs (Cisco, Postfix), CISA |
-| Mobile app | 20 | OWASP MASVS, OWASP MASTG, OWASP Mobile Top 10 (2024), Android Developers, Apple Developer |
+| Web app | 75 | PortSwigger Web Security Academy, OWASP Top 10 / Testing Guide / ASVS / cheat sheets / API Top 10, MITRE CWE, FIRST CVSS, IETF RFCs, AWS / Azure / Apache / Spring official docs |
+| Active Directory | 60 | MITRE ATT&CK, Microsoft Learn (Kerberos / NTLM / ADCS / LAPS / gMSA / Credential Guard / Tier 0), SpecterOps research, ADSecurity (Sean Metcalf), MSRC advisories |
+| Network | 60 | Nmap official docs, Microsoft Learn, MITRE ATT&CK / D3FEND, NIST SP 800-115 / 800-82 / 800-52, IETF RFCs, vendor docs (Cisco, Postfix, Tenable, Docker, Kubernetes, Elastic, MongoDB, Redis), CISA / CERT-CC |
+| Mobile app | 55 | OWASP MASVS, OWASP MASTG, OWASP Mobile Top 10 (2024), Android Developers, Apple Developer, Frida docs, AOSP, IETF RFCs |
 
 Every question carries a real, clickable authority URL — no faked citations.
 

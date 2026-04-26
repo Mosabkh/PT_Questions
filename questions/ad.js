@@ -551,4 +551,354 @@ window.QUESTION_BANK.ad = [
     },
     source: { name: 'Microsoft Learn — Configure Credential Guard', url: 'https://learn.microsoft.com/en-us/windows/security/identity-protection/credential-guard/' },
   },
+
+  {
+    id: 'ad-026', topic: 'ad', subtopic: 'eternalblue', difficulty: 'senior',
+    question: 'EternalBlue (CVE-2017-0144 / MS17-010) targets which Windows component?',
+    choices: ['SMBv1 server protocol implementation in srv.sys — a malformed SMB1 packet causes a kernel pool overflow allowing remote SYSTEM-level code execution. Mitigations: install MS17-010 patches and disable SMBv1 entirely', 'IIS HTTP parser', 'RDP termdd.sys (BlueKeep)', 'Print Spooler'],
+    correctIndex: 0,
+    explanation: 'MS17-010 fixes a memory-corruption bug in SMBv1 kernel processing. Microsoft\'s advisory and MITRE T1210 catalog the technique. SMBv1 should be disabled on every supported Windows.',
+    distractorRationale: { 1: 'IIS RCEs are different CVEs.', 2: 'BlueKeep is RDP, not SMB.', 3: 'PrintNightmare is Print Spooler.' },
+    source: { name: 'Microsoft Security Bulletin MS17-010', url: 'https://learn.microsoft.com/en-us/security-updates/securitybulletins/2017/ms17-010' },
+  },
+
+  {
+    id: 'ad-027', topic: 'ad', subtopic: 'petitpotam', difficulty: 'senior',
+    question: 'PetitPotam (CVE-2021-36942) achieves what?',
+    choices: ['It uses MS-EFSRPC to coerce a Windows host (typically a Domain Controller) to authenticate to an attacker-chosen UNC path, providing the NTLM material needed for relay attacks (e.g., to ADCS Web Enrollment for an ESC8-style chain)', 'It dumps krbtgt directly', 'It modifies SYSVOL', 'It is an LSASS dump'],
+    correctIndex: 0,
+    explanation: 'PetitPotam exploits the EFS RPC interface to trigger DCs to perform NTLM authentication to attacker hosts. Combined with NTLM relay to ADCS, it leads to DA. Microsoft\'s advisory and Microsoft\'s mitigations (KB5005413) document the chain.',
+    distractorRationale: { 1: 'krbtgt extraction is DCSync/secretsdump.', 2: 'SYSVOL modification is a separate ACL abuse.', 3: 'LSASS dump is post-foothold credential extraction.' },
+    source: { name: 'Microsoft MSRC — KB5005413 / PetitPotam guidance', url: 'https://msrc.microsoft.com/blog/2021/08/petitpotam-mitigation/' },
+  },
+
+  {
+    id: 'ad-028', topic: 'ad', subtopic: 'spoolsample', difficulty: 'senior',
+    question: 'SpoolSample / PrinterBug coerces authentication via which RPC call, and which built-in Windows service is responsible?',
+    choices: ['The MS-RPRN (Print Spooler) `RpcRemoteFindFirstPrinterChangeNotificationEx` triggers the target host\'s Print Spooler to authenticate to attacker-controlled UNC; relay or hash capture follows. Disabling Spooler on DCs is the standard hardening', 'MS-DRSR replication', 'NetLogon secure channel', 'Server-Server SMB'],
+    correctIndex: 0,
+    explanation: 'PrinterBug is the original printer-coercion technique. The Spooler service implements MS-RPRN; even authenticated calls reach this RPC. Disabling Spooler on DCs is one of the simplest hardenings and is widely recommended (Sean Metcalf, SpecterOps).',
+    distractorRationale: { 1: 'DRSR is replication; DCSync uses it.', 2: 'NetLogon is secure-channel maintenance.', 3: 'Generic SMB is not the coercion path.' },
+    source: { name: 'MITRE ATT&CK T1187 — Forced Authentication', url: 'https://attack.mitre.org/techniques/T1187/' },
+  },
+
+  {
+    id: 'ad-029', topic: 'ad', subtopic: 'dfscoerce', difficulty: 'senior',
+    question: 'DFSCoerce (CVE-2022-26925-adjacent) is another forced-auth primitive against DCs. What protocol does it abuse?',
+    choices: ['MS-DFSNM (Distributed File System Namespace Management) RPC — calling NetrDfsAddStdRoot or NetrDfsRemoveStdRoot on a DC coerces it to authenticate to an attacker UNC. Combined with NTLM relay (typically to ADCS), it leads to DA', 'MS-RPRN', 'MS-EFSRPC', 'MS-WSP'],
+    correctIndex: 0,
+    explanation: 'DFSCoerce is one of several DC-coercion vectors that researchers continue to find. Filterzied/FortiGuard and SpecterOps published the technique. Microsoft\'s NTLM relay mitigations (LDAP/SMB signing, EPA on web endpoints) remain the universal defence.',
+    distractorRationale: { 1: 'MS-RPRN is PrinterBug.', 2: 'EFSRPC is PetitPotam.', 3: 'MS-WSP is Windows Search.' },
+    source: { name: 'SpecterOps — DFSCoerce write-up (also: github.com/Wh04m1001/DFSCoerce)', url: 'https://github.com/Wh04m1001/DFSCoerce' },
+  },
+
+  {
+    id: 'ad-030', topic: 'ad', subtopic: 'netexec', difficulty: 'senior',
+    question: 'NetExec (the maintained successor to CrackMapExec) supports many protocol modules. Which is the most common module senior testers rely on for AD enumeration and lateral movement?',
+    choices: ['`smb` — performs auth attempts, share enumeration, RID brute force, password spraying, command execution via psexec/wmiexec, and supports Kerberos/NTLM. Other modules (ldap, winrm, mssql, rdp, ssh) cover specific protocols', 'A built-in C2 framework', 'A vulnerability scanner like Nessus', 'A web app fuzzer'],
+    correctIndex: 0,
+    explanation: 'NetExec\'s SMB module is the workhorse for AD pentests: spraying, share recon, lsa-secrets dump (with admin), and remote command execution. Its github documents each module.',
+    distractorRationale: { 1: 'NetExec is not a C2.', 2: 'It is not a vuln scanner.', 3: 'Not a web fuzzer.' },
+    source: { name: 'NetExec — official docs', url: 'https://www.netexec.wiki/' },
+  },
+
+  {
+    id: 'ad-031', topic: 'ad', subtopic: 'rubeus', difficulty: 'senior',
+    question: 'Rubeus is a C# tool for what purpose?',
+    choices: ['Kerberos abuse — request/parse/manipulate tickets (asktgt, kerberoast, asreproast, s4u, ptt, renew, monitor, etc.) directly via the Windows LSA APIs. Often used for Pass-the-Ticket, kerberoasting and S4U-based attacks', 'It is a SQL injection scanner', 'It is a web crawler', 'It is a port scanner'],
+    correctIndex: 0,
+    explanation: 'Rubeus by SpecterOps is the canonical Kerberos toolkit on Windows hosts (complementing Impacket which runs on Linux). The README enumerates the available verbs.',
+    distractorRationale: { 1: 'Not SQLi.', 2: 'Not a crawler.', 3: 'Not a port scanner.' },
+    source: { name: 'SpecterOps — Rubeus on GitHub', url: 'https://github.com/GhostPack/Rubeus' },
+  },
+
+  {
+    id: 'ad-032', topic: 'ad', subtopic: 'secretsdump', difficulty: 'senior',
+    question: 'Impacket\'s `secretsdump.py -just-dc` against a DC retrieves which artefacts?',
+    choices: ['User and machine NT/LM hashes, Kerberos keys, the krbtgt hash, machine LSA secrets, and (with -just-dc-ntlm) NT-only — using DCSync replication primitives. Requires DCSync rights or admin on the DC', 'The krbtgt password in plaintext', 'The CA private key', 'The local SAM only'],
+    correctIndex: 0,
+    explanation: 'secretsdump in `-just-dc` mode performs DCSync (DRS replication) to retrieve credential material for every account in the directory. It does NOT recover plaintext passwords — only hashes/keys. Impacket\'s docs and MITRE T1003.006 describe the operation.',
+    distractorRationale: { 1: 'krbtgt password is not stored plaintext.', 2: 'CA private key is in HSM/registry, not via DCSync.', 3: 'Local SAM is via -sam mode, not -just-dc.' },
+    source: { name: 'Fortra Impacket — secretsdump.py', url: 'https://github.com/fortra/impacket/blob/master/examples/secretsdump.py' },
+  },
+
+  {
+    id: 'ad-033', topic: 'ad', subtopic: 'impacket-psexec', difficulty: 'senior',
+    question: 'Why do experienced testers prefer Impacket\'s `psexec.py` and `wmiexec.py` over Sysinternals PsExec for engagements?',
+    choices: ['They run from Linux without binary uploads, leverage SMB/named-pipes (psexec) or WMI (wmiexec) directly, and support Pass-the-Hash; Sysinternals PsExec drops a service binary on disk on the target, leaving more artefacts', 'They are slower', 'They are GUI-only', 'They require Domain Admin only'],
+    correctIndex: 0,
+    explanation: 'Impacket\'s remote-execution scripts are crafted for offensive use: less artefact, native PtH support, no Windows binary required to run. Sysinternals PsExec is admin-friendly but noisier. Fortra\'s Impacket repo documents all examples.',
+    distractorRationale: { 1: 'They are typically faster end-to-end.', 2: 'CLI tools.', 3: 'Local admin on target works; DA not required.' },
+    source: { name: 'Fortra Impacket — examples (psexec.py / wmiexec.py)', url: 'https://github.com/fortra/impacket/tree/master/examples' },
+  },
+
+  {
+    id: 'ad-034', topic: 'ad', subtopic: 'dpapi', difficulty: 'senior',
+    question: 'DPAPI (Data Protection API) protects user secrets (browser passwords, RDP creds, Wi-Fi keys). After a foothold, how can an attacker decrypt these?',
+    choices: ['With the user\'s logon password, NT hash, or DPAPI master keys (mimikatz `dpapi::masterkey` / `dpapi::cred`); domain-joined accounts also have a backup master key encrypted by the DPAPI domain backup key held by DCs — DA can decrypt any user\'s DPAPI', 'DPAPI is only used for Bitlocker', 'DPAPI requires a TPM and cannot be decrypted offline', 'DPAPI uses RSA-only and cannot be cracked'],
+    correctIndex: 0,
+    explanation: 'DPAPI key hierarchy uses a master key derived from the user credential (or domain backup key for domain accounts). Mimikatz\'s dpapi module operationalises decryption. Microsoft and SpecterOps both document the chain.',
+    distractorRationale: { 1: 'DPAPI predates and is broader than BitLocker.', 2: 'Decryption is feasible with the right secrets.', 3: 'Symmetric AES is involved at lower layers.' },
+    source: { name: 'MITRE ATT&CK T1555.003 — Credentials from Password Stores: DPAPI', url: 'https://attack.mitre.org/techniques/T1555/004/' },
+  },
+
+  {
+    id: 'ad-035', topic: 'ad', subtopic: 'mimikatz-sekurlsa', difficulty: 'senior',
+    question: 'Mimikatz\'s `sekurlsa::logonpasswords` reads what, and what does Microsoft recommend to mitigate it?',
+    choices: ['It reads cached credentials and Kerberos keys from LSASS memory. Mitigations: enable Credential Guard (VBS-isolated LSAIso), enable LSA Protection (RunAsPPL), and minimise interactive logons with privileged accounts (Tier 0 model)', 'It reads BIOS passwords', 'It reads BitLocker keys from TPM only', 'It reads only locally cached LM hashes'],
+    correctIndex: 0,
+    explanation: 'sekurlsa walks LSASS memory for credential material. Credential Guard moves the secrets to a VBS-isolated process; LSA Protection makes lsass.exe a Protected Process. MITRE T1003.001 catalogs the technique.',
+    distractorRationale: { 1: 'BIOS is unrelated.', 2: 'BitLocker keys are in TPM-bound paths.', 3: 'Modern variants read NTLM/Kerberos, not just LM.' },
+    source: { name: 'MITRE ATT&CK T1003.001 — OS Credential Dumping: LSASS Memory', url: 'https://attack.mitre.org/techniques/T1003/001/' },
+  },
+
+  {
+    id: 'ad-036', topic: 'ad', subtopic: 'ntds-dit', difficulty: 'senior',
+    question: 'NTDS.dit on a Domain Controller contains all account hashes. Online extraction methods compete with offline. What is the offline path?',
+    choices: ['On a DC: dump the NTDS.dit file plus the SYSTEM hive (e.g., via `ntdsutil ifm` or `vssadmin` shadow copy), then run `secretsdump.py -ntds NTDS.dit -system SYSTEM LOCAL` to extract hashes offline. This avoids the DRS replication signature of online DCSync', 'Decrypt only with cloud KMS', 'Use a TPM-only path', 'Read it directly without keys'],
+    correctIndex: 0,
+    explanation: 'Offline extraction is the classic approach when online DCSync is monitored. The SYSTEM hive provides the boot key needed to decrypt NTDS. MITRE T1003.003 catalogs both online and offline paths.',
+    distractorRationale: { 1: 'Cloud KMS is unrelated.', 2: 'TPM is not the unlock here.', 3: 'NTDS.dit is encrypted; you need the boot key.' },
+    source: { name: 'MITRE ATT&CK T1003.003 — OS Credential Dumping: NTDS', url: 'https://attack.mitre.org/techniques/T1003/003/' },
+  },
+
+  {
+    id: 'ad-037', topic: 'ad', subtopic: 'sebackup-priv', difficulty: 'senior',
+    question: 'A user has been granted `SeBackupPrivilege` on a DC. Why is this dangerous?',
+    choices: ['SeBackupPrivilege bypasses ACL checks for read access — the user can read NTDS.dit and the SYSTEM hive directly (e.g., via `robocopy` or `Backup-WindowsBackupRoot`), then extract every domain hash offline. Effectively a DA-equivalent right when granted on a DC', 'It only affects file backup software', 'It is required for any user to log in', 'It limits the user\'s read access'],
+    correctIndex: 0,
+    explanation: 'SeBackupPrivilege exists for legitimate backup operators but is a known privilege-escalation vector when granted to non-tier-0 users on tier-0 systems. SpecterOps and Microsoft Learn document the right and its abuse paths.',
+    distractorRationale: { 1: 'It is a Windows privilege constant, not just for backup software.', 2: 'It is not required for login.', 3: 'It expands, not limits, read access.' },
+    source: { name: 'Microsoft Learn — SeBackupPrivilege', url: 'https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/back-up-files-and-directories' },
+  },
+
+  {
+    id: 'ad-038', topic: 'ad', subtopic: 'unquoted-service-path', difficulty: 'senior',
+    question: 'A Windows service has the binary path `C:\\\\Program Files\\\\Vendor App\\\\service.exe` configured WITHOUT quotes. What attack does this enable on a low-priv user with write access to `C:\\\\` or any parent?',
+    choices: ['Unquoted service path — Windows will try `C:\\\\Program.exe`, then `C:\\\\Program Files\\\\Vendor.exe`, etc. before the real binary. Dropping a malicious `Program.exe` (with write rights) is loaded as the service account when the service starts. Fix: quote the binary path or remove write access from intermediate directories', 'A SQL injection', 'A WPAD attack', 'A Kerberoast'],
+    correctIndex: 0,
+    explanation: 'CreateProcess searches whitespace-split prefixes when the path is unquoted. MITRE T1574.009 catalogs this. Fix is straightforward but it is still a frequent finding in legacy installs.',
+    distractorRationale: { 1: 'Unrelated to SQL.', 2: 'WPAD is a different protocol-level attack.', 3: 'Kerberoasting is offline TGS cracking.' },
+    source: { name: 'MITRE ATT&CK T1574.009 — Hijack Execution Flow: Path Interception by Unquoted Path', url: 'https://attack.mitre.org/techniques/T1574/009/' },
+  },
+
+  {
+    id: 'ad-039', topic: 'ad', subtopic: 'weak-service-acl', difficulty: 'senior',
+    question: 'You discover a service whose ACL grants `Authenticated Users: Change Configuration`. What does this allow?',
+    choices: ['Any authenticated user can change the binary path or arguments of the service via `sc config <name> binPath= "..."`, and (if start=auto) reload it as SYSTEM at next boot — full privilege escalation. Detection: `accesschk -uvwc` from Sysinternals', 'They can read all event logs', 'They can change BIOS settings', 'They can disable Windows Defender'],
+    correctIndex: 0,
+    explanation: 'Weak service ACLs (Modify, Change Configuration) are a frequent local privesc vector. PowerUp/SeatBelt/winPEAS surface them. MITRE T1574.011 catalogs the technique.',
+    distractorRationale: { 1: 'Event logs are a different ACL.', 2: 'BIOS is firmware.', 3: 'Defender controls are separate.' },
+    source: { name: 'MITRE ATT&CK T1574.011 — Hijack Execution Flow: Services Registry Permissions Weakness', url: 'https://attack.mitre.org/techniques/T1574/011/' },
+  },
+
+  {
+    id: 'ad-040', topic: 'ad', subtopic: 'always-install-elevated', difficulty: 'senior',
+    question: 'Both `HKLM\\\\Software\\\\Policies\\\\Microsoft\\\\Windows\\\\Installer\\\\AlwaysInstallElevated` and `HKCU` set to 1 enable what attack?',
+    choices: ['Any low-priv user can run `msiexec /i evil.msi` and the MSI installs as SYSTEM. A trivial path to local admin if both registry values are set. Microsoft documents this as a misconfiguration to avoid', 'A network sniff', 'A Kerberos attack', 'A LDAP injection'],
+    correctIndex: 0,
+    explanation: 'AlwaysInstallElevated grants SYSTEM privileges to MSI installs invoked by any user. It exists for niche enterprise scenarios but is widely treated as a misconfiguration. MITRE T1548.002 (Bypass User Account Control) catalogs it.',
+    distractorRationale: { 1: 'Network sniffing is unrelated.', 2: 'Not a Kerberos attack.', 3: 'Not an LDAP attack.' },
+    source: { name: 'Microsoft Learn — AlwaysInstallElevated risk', url: 'https://learn.microsoft.com/en-us/windows/win32/msi/alwaysinstallelevated' },
+  },
+
+  {
+    id: 'ad-041', topic: 'ad', subtopic: 'dll-hijacking', difficulty: 'senior',
+    question: 'DLL Search Order Hijacking succeeds because Windows searches a defined order for unpathed DLL imports. Which is FIRST in the standard search order on modern Windows (with safe DLL search mode enabled)?',
+    choices: ['The directory containing the loading executable, then System32, then the current working directory, then PATH directories. Hijacking succeeds when a writable directory earlier in the order does not contain the legitimate DLL but the attacker can plant one', 'PATH first, then everything else', 'C:\\\\Windows last', 'Random order'],
+    correctIndex: 0,
+    explanation: 'Microsoft\'s Dynamic-Link Library Search Order documentation lists the precise order with and without safe DLL search mode. MITRE T1574.001 enumerates exploitation patterns.',
+    distractorRationale: { 1: 'PATH is later, after working dir.', 2: 'C:\\Windows/System32 is earlier.', 3: 'It is deterministic.' },
+    source: { name: 'Microsoft Learn — Dynamic-Link Library Search Order', url: 'https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order' },
+  },
+
+  {
+    id: 'ad-042', topic: 'ad', subtopic: 'ldap-channel-binding', difficulty: 'senior',
+    question: 'Microsoft ADV190023 hardens LDAP. Which two controls does it recommend?',
+    choices: ['Require LDAP signing (`LdapServerIntegrity`) and enable LDAP channel binding token (`EPA`) on LDAPS — together they prevent NTLM relay against LDAP, a frequent foothold-to-DA primitive', 'Disable Kerberos pre-authentication', 'Disable IPv6 only', 'Enable SMBv1'],
+    correctIndex: 0,
+    explanation: 'ADV190023 introduced the LDAP signing/channel-binding requirements specifically to mitigate NTLM relay against LDAP/LDAPS. Microsoft\'s advisory and follow-up KBs detail the deployment timeline and audit-vs-enforce modes.',
+    distractorRationale: { 1: 'Disabling preauth weakens AS-REP.', 2: 'IPv6 alone does not address LDAP relay.', 3: 'SMBv1 should be disabled, not enabled.' },
+    source: { name: 'Microsoft Security Advisory ADV190023 — LDAP Channel Binding and LDAP Signing', url: 'https://msrc.microsoft.com/update-guide/vulnerability/ADV190023' },
+  },
+
+  {
+    id: 'ad-043', topic: 'ad', subtopic: 'ntlmv1-vs-v2', difficulty: 'senior',
+    question: 'Why do attackers love finding NetNTLMv1 hashes vs NetNTLMv2 hashes?',
+    choices: ['NetNTLMv1 uses a fixed-format response based on DES with the NT hash; with the challenge known/forced (e.g., setting LMCompatibilityLevel low or via a captured handshake), it is trivially crackable using rainbow services like crack.sh — often yielding the NT hash directly. NetNTLMv2 uses HMAC-MD5 with random server/client challenges and salts, much harder to crack', 'They are identical strength', 'NTLMv1 is encrypted, NTLMv2 is plaintext', 'NTLMv2 is a TLS protocol'],
+    correctIndex: 0,
+    explanation: 'NetNTLMv1\'s structural weaknesses are well-documented. crack.sh provides a public service to recover NT hashes from intercepted v1 responses cheaply. Microsoft\'s LMCompatibilityLevel guidance pushes v2-only.',
+    distractorRationale: { 1: 'They differ in cryptographic strength.', 2: 'Both are challenge-response, neither plaintext.', 3: 'NTLMv2 is not TLS.' },
+    source: { name: 'Microsoft Learn — Network security: LAN Manager authentication level', url: 'https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-lan-manager-authentication-level' },
+  },
+
+  {
+    id: 'ad-044', topic: 'ad', subtopic: 'ad-recycle-bin', difficulty: 'senior',
+    question: 'The AD Recycle Bin feature affects what during an engagement?',
+    choices: ['Deleted AD objects are retained recoverable; from a defender perspective, it aids forensics; from an attacker perspective, an attacker who creates and deletes objects (e.g., spoofed accounts) leaves recoverable artefacts. Senior testers note its presence in scope/RoE because it changes detectability of certain techniques', 'It encrypts NTDS.dit', 'It blocks DCSync', 'It enables 2FA'],
+    correctIndex: 0,
+    explanation: 'AD Recycle Bin is a feature on functional level 2008 R2+, enabled per-domain. It retains deleted objects and can be queried with PowerShell. Microsoft Learn documents its use.',
+    distractorRationale: { 1: 'Encryption of NTDS is separate.', 2: 'It does not block DCSync.', 3: 'No 2FA enforcement here.' },
+    source: { name: 'Microsoft Learn — Active Directory Recycle Bin', url: 'https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/adac/introduction-to-active-directory-administrative-center-enhancements--level-100-#bkmk_RecycleBin' },
+  },
+
+  {
+    id: 'ad-045', topic: 'ad', subtopic: 'tier-0-model', difficulty: 'senior',
+    question: 'Microsoft\'s Tier 0 / Tier 1 / Tier 2 administrative model (now part of the Enterprise Access Model) prescribes what?',
+    choices: ['Strict separation: Tier 0 (DCs, AD, ADCS, ADFS, identity-critical assets) admins NEVER log on to lower tiers. Tier 1 (servers/apps) admins do not log on to workstations. Tier 2 (workstations) admins do not log on to higher tiers. Goal: prevent credential exposure (LSASS) chaining low-trust hosts to DA', 'All admins use the same account', 'Admin tasks must be done from kiosks only', 'Tier 0 is for printers'],
+    correctIndex: 0,
+    explanation: 'The Enterprise Access Model (modern successor to Tier 0/1/2) is the canonical Microsoft guidance for credential isolation. Microsoft Learn covers the rationale, identity-protection patterns, and PAW (privileged access workstations).',
+    distractorRationale: { 1: 'Account separation is the whole point.', 2: 'Kiosks misframes the concept.', 3: 'Tier 0 is for identity-critical assets.' },
+    source: { name: 'Microsoft Learn — Enterprise Access Model (formerly Tier 0/1/2)', url: 'https://learn.microsoft.com/en-us/security/privileged-access-workstations/privileged-access-access-model' },
+  },
+
+  {
+    id: 'ad-046', topic: 'ad', subtopic: 'pass-the-cert', difficulty: 'senior',
+    question: 'After obtaining a user\'s X.509 certificate (e.g., via ADCS issuance), Pass-the-Cert allows what?',
+    choices: ['Authenticating to AD via PKINIT — request a TGT for the certificate\'s subject without knowing the password. Tools like Certipy and Rubeus implement this. Combined with ADCS misconfigs (ESC1, etc.), it is the post-issuance step in many domain-takeover chains', 'Decrypting the krbtgt hash', 'Reading SYSVOL secrets', 'Resetting passwords'],
+    correctIndex: 0,
+    explanation: 'PKINIT (Public Key Cryptography for Initial Authentication in Kerberos) lets clients present certificates to the KDC for a TGT. Possessing a valid certificate equals possessing the credential. SpecterOps\' Certipy / Certified Pre-Owned papers detail the workflow.',
+    distractorRationale: { 1: 'krbtgt hash decryption is unrelated.', 2: 'SYSVOL is file-share content.', 3: 'Password reset needs explicit ACL rights.' },
+    source: { name: 'SpecterOps — Certipy / PKINIT abuse documentation', url: 'https://github.com/ly4k/Certipy' },
+  },
+
+  {
+    id: 'ad-047', topic: 'ad', subtopic: 'esc4', difficulty: 'senior',
+    question: 'ESC4 in the ADCS escalation taxonomy refers to which misconfiguration?',
+    choices: ['A user has WriteDACL/WriteOwner/Write rights over a certificate template and can therefore modify it (e.g., flipping ENROLLEE_SUPPLIES_SUBJECT, granting Enroll, lowering manager-approval) to convert the template into an ESC1-equivalent — then exploit it', 'A revoked CA private key', 'A SAM dump from the CA', 'NTLM relay to LDAP'],
+    correctIndex: 0,
+    explanation: 'ESC4 is "vulnerable certificate template ACLs". The attacker rewrites a template to make it abusable, then enrols. SpecterOps\' Certified Pre-Owned paper enumerates ESC1 through ESC8+; ESC4 is the templated-ACL abuse class.',
+    distractorRationale: { 1: 'CA key revocation is operational.', 2: 'SAM is a Windows artefact.', 3: 'LDAP relay is ESC8/9 territory.' },
+    source: { name: 'SpecterOps — Certified Pre-Owned (ESC4 details)', url: 'https://posts.specterops.io/certified-pre-owned-d95910965cd2' },
+  },
+
+  {
+    id: 'ad-048', topic: 'ad', subtopic: 'esc11', difficulty: 'senior',
+    question: 'ESC11 (added later to the ADCS taxonomy) leverages which protocol weakness?',
+    choices: ['NTLM relay to the ICPR (ICertPassage) RPC interface on AD CS, which historically did not enforce signing; the relayed NTLM grants enrollment privileges and the attacker requests a certificate, similar to ESC8 but via RPC instead of HTTP Web Enrollment', 'Plaintext password disclosure on CRL', 'Disabled MFA on the CA', 'Mis-issued root CA'],
+    correctIndex: 0,
+    explanation: 'ESC11 generalises ESC8\'s relay path to ICPR. Microsoft has since shipped hardening (KB5005413, ADV updates). SpecterOps and the Certipy docs cover ESC11 specifics.',
+    distractorRationale: { 1: 'CRL is publication, not credentials.', 2: 'MFA on CA enrollment is separate.', 3: 'Root mis-issuance is a CA hygiene issue.' },
+    source: { name: 'SpecterOps — Certipy 4.0 ESC11 documentation', url: 'https://github.com/ly4k/Certipy' },
+  },
+
+  {
+    id: 'ad-049', topic: 'ad', subtopic: 'proxylogon', difficulty: 'senior',
+    question: 'ProxyLogon (CVE-2021-26855) targets which Microsoft product, and what is the impact?',
+    choices: ['Microsoft Exchange Server — a pre-auth SSRF in the Client Access Service that, chained with CVE-2021-27065 and others (ProxyLogon chain), allows unauthenticated remote code execution as SYSTEM on the Exchange server. Many domains store DA-equivalent privileges via Exchange permissions in legacy deployments, making this near-DA', 'Outlook Web App only', 'On-prem SharePoint', 'Windows Update'],
+    correctIndex: 0,
+    explanation: 'ProxyLogon affects on-prem Exchange. Microsoft\'s MSRC advisory and CISA emergency directive published the chain and remediation. Patching is the only complete fix.',
+    distractorRationale: { 1: 'OWA is a feature, not the product.', 2: 'SharePoint has its own CVEs.', 3: 'Windows Update is unrelated.' },
+    source: { name: 'Microsoft MSRC — CVE-2021-26855 (ProxyLogon)', url: 'https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-26855' },
+  },
+
+  {
+    id: 'ad-050', topic: 'ad', subtopic: 'proxyshell', difficulty: 'senior',
+    question: 'ProxyShell chains three Exchange CVEs to achieve RCE. Which three?',
+    choices: ['CVE-2021-34473 (pre-auth path confusion), CVE-2021-34523 (priv esc in PowerShell back-end), CVE-2021-31207 (post-auth arbitrary file write) — published by Orange Tsai at Pwn2Own/Black Hat and immediately weaponised by ransomware operators', 'CVE-2017-0144 chain', 'Three RDP CVEs', 'Three SMB CVEs'],
+    correctIndex: 0,
+    explanation: 'ProxyShell was published in Orange Tsai\'s Black Hat USA 2021 talk and weaponised within weeks. CISA and Microsoft both produced detailed advisories and patches.',
+    distractorRationale: { 1: 'EternalBlue is SMBv1.', 2: 'RDP CVEs are different chains.', 3: 'SMB is not the protocol here.' },
+    source: { name: 'Microsoft MSRC — ProxyShell CVE roundup (CVE-2021-34473)', url: 'https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-34473' },
+  },
+
+  {
+    id: 'ad-051', topic: 'ad', subtopic: 'dnsadmin-rce', difficulty: 'senior',
+    question: 'A user is in the `DnsAdmins` group on a Domain Controller. What classic RCE primitive does this enable?',
+    choices: ['DnsAdmins can configure the DNS service to load a custom DLL via `dnscmd /config /serverlevelplugindll`. The DLL is loaded by `dns.exe` running as SYSTEM on the DC at next service restart, yielding SYSTEM on the DC. Microsoft\'s ADMP guidance (and SpecterOps) flag this as a tier-0 escalation', 'It only allows DNS record edits', 'It triggers WPAD', 'It enables Kerberoast'],
+    correctIndex: 0,
+    explanation: 'DnsAdmins\' ServerLevelPluginDll capability is a documented tier-0 escalation path when DNS is co-hosted on DCs. SpecterOps and Mark Russinovich-era guidance recommend either removing the membership or moving DNS off DCs.',
+    distractorRationale: { 1: 'DNS record edits are a subset; the DLL loader is the privesc.', 2: 'WPAD is a separate protocol abuse.', 3: 'Kerberoast is offline TGS cracking.' },
+    source: { name: 'SpecterOps — DnsAdmins to Domain Admin', url: 'https://medium.com/techzap/dnsadmins-to-da-fc1b5f3e6cc1' },
+  },
+
+  {
+    id: 'ad-052', topic: 'ad', subtopic: 'reversible-encryption', difficulty: 'senior',
+    question: 'A user account has `userAccountControl` flag `ENCRYPTED_TEXT_PWD_ALLOWED` (reversible encryption) set. What does this expose?',
+    choices: ['The password is stored such that AD can recover plaintext; with DCSync (or NTDS.dit access), an attacker retrieves the plaintext password directly. Microsoft\'s advice is to never enable this except for very specific legacy auth needs (CHAP), and to audit accounts that have it', 'It encrypts the user\'s files', 'It prevents Kerberos auth', 'It enables 2FA'],
+    correctIndex: 0,
+    explanation: 'Reversible encryption (UAC bit 0x80) makes the password decryptable from the DC database. Mimikatz and secretsdump surface these. Microsoft\'s docs explicitly warn about it.',
+    distractorRationale: { 1: 'It is about the password, not files.', 2: 'It does not block Kerberos.', 3: 'It does not enable MFA.' },
+    source: { name: 'Microsoft Learn — Store passwords using reversible encryption', url: 'https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/store-passwords-using-reversible-encryption' },
+  },
+
+  {
+    id: 'ad-053', topic: 'ad', subtopic: 'kerberos-pac', difficulty: 'senior',
+    question: 'The Privilege Attribute Certificate (PAC) inside a Kerberos ticket contains what?',
+    choices: ['Authorisation data including the user\'s SID, group memberships and other privileges; the resource service uses the PAC to make access decisions without re-querying the DC. Forged PACs (Golden/Silver tickets) place arbitrary group memberships into the ticket', 'Only the username', 'Only the password hash', 'Only the realm name'],
+    correctIndex: 0,
+    explanation: 'PAC is Microsoft\'s Kerberos extension carrying authorisation context. MS-PAC documentation defines the structure. PAC validation against the DC was strengthened around the noPac timeline.',
+    distractorRationale: { 1: 'Username only is insufficient for authz.', 2: 'Hash is not in the ticket.', 3: 'Realm is in the ticket header, not the PAC.' },
+    source: { name: 'Microsoft — [MS-PAC] Privilege Attribute Certificate Data Structure', url: 'https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pac/' },
+  },
+
+  {
+    id: 'ad-054', topic: 'ad', subtopic: 'smbv3-ghost', difficulty: 'senior',
+    question: 'SMBGhost (CVE-2020-0796) targets which feature?',
+    choices: ['SMBv3.1.1 compression decompression — a malformed compressed packet triggers an integer overflow leading to remote SYSTEM RCE on the SMB server (and similarly client-side). Mitigations: disable compression via registry (DisableCompression=1) and apply patches', 'SMBv1 negotiation', 'SMBv2 signing', 'NetBIOS name resolution'],
+    correctIndex: 0,
+    explanation: 'SMBGhost is post-EternalBlue era — affecting modern SMB. Microsoft\'s advisory ADV200005 and CVE-2020-0796 detail it. Many environments still run unpatched.',
+    distractorRationale: { 1: 'SMBv1 is EternalBlue.', 2: 'Signing is unrelated to compression.', 3: 'NetBIOS is L2/3 name resolution.' },
+    source: { name: 'Microsoft MSRC — CVE-2020-0796 (SMBGhost)', url: 'https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-0796' },
+  },
+
+  {
+    id: 'ad-055', topic: 'ad', subtopic: 'sccm-naa', difficulty: 'senior',
+    question: 'SCCM (now Microsoft Configuration Manager) Network Access Account (NAA) credentials are a frequent senior-level finding because:',
+    choices: ['NAA credentials are stored in WMI on every client and can be retrieved by any local user (with PowerShell or tools like SharpSCCM); the NAA is often a domain account with broad share access, providing immediate lateral movement and frequently a path toward DA', 'They are encrypted with TPM-only', 'They are random per-host', 'They are 32-character keys never reused'],
+    correctIndex: 0,
+    explanation: 'NAA exposure is a long-standing SCCM vulnerability. SpecterOps, Adam Chester, and Garrett Foster have published detailed exploitation paths. Microsoft\'s guidance is to use Enhanced HTTP and remove NAA, but legacy deployments persist.',
+    distractorRationale: { 1: 'TPM is not the protection.', 2: 'They are typically shared.', 3: 'Length is not the issue.' },
+    source: { name: 'SpecterOps — SCCM NAA / SharpSCCM research', url: 'https://posts.specterops.io/coercing-ntlm-authentication-from-sccm-e6e23ea8260a' },
+  },
+
+  {
+    id: 'ad-056', topic: 'ad', subtopic: 'machine-account-quota', difficulty: 'senior',
+    question: 'The default `ms-DS-MachineAccountQuota` value of 10 enables which technique?',
+    choices: ['Any authenticated domain user can create up to 10 computer accounts. This is the precondition for RBCD takeover (creating an attacker-controlled computer object whose SID is added to msDS-AllowedToActOnBehalfOfOtherIdentity) and several relay-based chains. Many environments set MAQ=0 to mitigate', 'Only Domain Admins can create computers', 'It enforces 2FA', 'It controls Kerberoasting'],
+    correctIndex: 0,
+    explanation: 'MAQ=10 is a long-standing default that has become a precondition for several modern AD attacks. Microsoft and SpecterOps recommend setting MAQ=0 and granting CreateChild on a specific OU to operators that need it.',
+    distractorRationale: { 1: 'Any authenticated user can — that is the issue.', 2: 'No 2FA control here.', 3: 'Unrelated to TGS cracking.' },
+    source: { name: 'Microsoft Learn — Default limit to number of workstations a user can join to the domain (MAQ)', url: 'https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/default-workstation-numbers-join-domain' },
+  },
+
+  {
+    id: 'ad-057', topic: 'ad', subtopic: 'shadow-credentials', difficulty: 'senior',
+    question: 'The "Shadow Credentials" attack uses which AD attribute?',
+    choices: ['`msDS-KeyCredentialLink` — by writing a public key to this attribute on a target user/computer object, an attacker performs PKINIT authentication as that principal. Requires Write access to the attribute (e.g., GenericWrite). Tools: Whisker, ntlmrelayx --shadow-credentials', 'krbtgt password', 'GPP cpassword', 'SIDHistory'],
+    correctIndex: 0,
+    explanation: 'Shadow Credentials was popularised by SpecterOps; it pivots on the Windows Hello for Business attribute msDS-KeyCredentialLink. Writing one is sufficient for PKINIT-based authentication as the target.',
+    distractorRationale: { 1: 'krbtgt is the Golden Ticket key, not a per-user attribute.', 2: 'GPP is GPO-stored credentials.', 3: 'SIDHistory is for cross-domain access.' },
+    source: { name: 'SpecterOps — Shadow Credentials research', url: 'https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ec' },
+  },
+
+  {
+    id: 'ad-058', topic: 'ad', subtopic: 'win-credential-manager', difficulty: 'senior',
+    question: 'Windows Credential Manager stores cached credentials (RDP, network share creds). After local foothold, attackers extract these via:',
+    choices: ['Mimikatz `vault::cred` and `dpapi::cred` (using master keys), or built-in `cmdkey /list` to enumerate. The credentials are protected by DPAPI under the user\'s context, so an attacker running as that user can decrypt without further escalation', 'Windows Defender API', 'BitLocker recovery key', 'Shadow Copy only'],
+    correctIndex: 0,
+    explanation: 'Credential Manager + DPAPI is a frequent post-exploit credential source. MITRE T1555.004 catalogs the technique. Defenders can audit which apps store credentials there.',
+    distractorRationale: { 1: 'Defender does not expose this API.', 2: 'BitLocker key is for disk encryption.', 3: 'Shadow Copy is for files.' },
+    source: { name: 'MITRE ATT&CK T1555.004 — Credentials from Password Stores: Windows Credential Manager', url: 'https://attack.mitre.org/techniques/T1555/004/' },
+  },
+
+  {
+    id: 'ad-059', topic: 'ad', subtopic: 'trust-types', difficulty: 'senior',
+    question: 'Which AD trust type is intended for non-Windows Kerberos realms (e.g., MIT/Heimdal)?',
+    choices: ['Realm trust — a trust between a Windows AD domain and a non-AD Kerberos realm. Different from External (one Windows domain to another, in a different forest), Forest (between forest roots), and Shortcut (within a forest, performance optimisation)', 'Forest trust', 'External trust', 'Shortcut trust'],
+    correctIndex: 0,
+    explanation: 'Microsoft Learn enumerates trust types: External, Forest, Realm, Shortcut. Realm trusts target non-Windows Kerberos. From a senior-pentester scoping perspective, knowing trust types matters because authentication boundaries differ.',
+    distractorRationale: { 1: 'Forest is between forest roots.', 2: 'External is between two Windows domains in different forests.', 3: 'Shortcut is intra-forest optimisation.' },
+    source: { name: 'Microsoft Learn — Trust types in Active Directory Domain Services', url: 'https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc775736(v=ws.10)' },
+  },
+
+  {
+    id: 'ad-060', topic: 'ad', subtopic: 'azure-ad-connect', difficulty: 'senior',
+    question: 'Azure AD Connect (Microsoft Entra Connect) on-prem server is a tier-0 asset because:',
+    choices: ['It synchronises identities and (often) password hashes between on-prem AD and Entra ID; it stores credentials with high privilege on both sides (the on-prem MSOL_<...> account commonly has DCSync rights, and the cloud-side Sync account is privileged). Compromise of the AAD Connect server frequently equals compromise of the entire identity plane', 'It only stores public keys', 'It runs as a low-privilege service', 'It uses no credentials'],
+    correctIndex: 0,
+    explanation: 'Microsoft Entra Connect is consistently flagged as tier-0. The on-prem MSOL_ account historically has Replicate Directory Changes rights. Attackers target this server for "one server to rule both planes". SpecterOps, Microsoft and Sean Metcalf have written detailed guidance.',
+    distractorRationale: { 1: 'It stores credentials (or hashes), not just public keys.', 2: 'It runs with high privilege.', 3: 'It uses several accounts.' },
+    source: { name: 'Microsoft Learn — Microsoft Entra Connect: Accounts and permissions', url: 'https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/reference-connect-accounts-permissions' },
+  },
 ];
